@@ -187,10 +187,21 @@ async function getCustomerCreditInfo(
       credits = [];
     }
 
-    // Calculate totals
-    const totalCredits = credits.reduce((sum, c) => sum + parseFloat(c.total_amount.toString()), 0);
-    const totalPaid = credits.reduce((sum, c) => sum + parseFloat(c.paid_amount.toString()), 0);
-    const totalOutstanding = credits.reduce((sum, c) => sum + parseFloat(c.remaining_amount.toString()), 0);
+    console.log('Found credits count:', credits.length);
+
+    // Calculate totals - handle numeric types from Supabase
+    const totalCredits = credits.reduce((sum, c) => {
+      const amount = typeof c.total_amount === 'number' ? c.total_amount : parseFloat(c.total_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    const totalPaid = credits.reduce((sum, c) => {
+      const amount = typeof c.paid_amount === 'number' ? c.paid_amount : parseFloat(c.paid_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    const totalOutstanding = credits.reduce((sum, c) => {
+      const amount = typeof c.remaining_amount === 'number' ? c.remaining_amount : parseFloat(c.remaining_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
     const unpaidCount = credits.filter(c => c.status === 'unpaid').length;
     const partiallyPaidCount = credits.filter(c => c.status === 'partially-paid').length;
 
