@@ -225,9 +225,9 @@ export function CustomerDetails({
       const cleanPhone = customer.phone.replace(/[\s\-\(\)]/g, '');
       
       // Check if we're in a webview (Telegram Mini App, etc.) where sms: might not work
-      const isWebView = window.navigator.standalone || 
+      const isWebView = (window.navigator as any).standalone || 
                        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-                       (window.Telegram && window.Telegram.WebApp);
+                       ((window as any).Telegram && (window as any).Telegram.WebApp);
       
       // Build SMS URL
       const smsUrl = `sms:${cleanPhone}?body=${encodeURIComponent(message)}`;
