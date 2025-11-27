@@ -499,25 +499,38 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'add-customer' | 'customer-details' | 'add-credit' | 'all-credits' | 'reports' | 'settings' | 'shop-profile' | 'staff'>('dashboard');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [pendingCustomerId, setPendingCustomerId] = useState<string | null>(null);
 
-  // Handle deep links from Telegram bot
+  // Handle deep links from Telegram bot - check URL on mount
   useEffect(() => {
-    // Check for customerId in URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
+    
+    if (customerId) {
+      // Store customerId for later navigation (even if user is not logged in)
+      setPendingCustomerId(customerId);
+      // Clean up URL immediately
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
-    if (customerId && user && !isLoading && appState.customers.length > 0) {
+  // Navigate to customer details when user is logged in and data is loaded
+  useEffect(() => {
+    if (pendingCustomerId && user && !isLoading && appState.customers.length > 0) {
       // Verify customer exists
-      const customer = appState.customers.find(c => c.id === customerId);
+      const customer = appState.customers.find(c => c.id === pendingCustomerId);
       if (customer) {
         // Navigate to customer details
-        setSelectedCustomerId(customerId);
+        setSelectedCustomerId(pendingCustomerId);
         setCurrentView('customer-details');
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname);
+        // Clear pending customerId
+        setPendingCustomerId(null);
+      } else {
+        // Customer not found, clear pending
+        setPendingCustomerId(null);
       }
     }
-  }, [user, isLoading, appState.customers]);
+  }, [pendingCustomerId, user, isLoading, appState.customers]);
 
   // Check authentication on mount
   useEffect(() => {

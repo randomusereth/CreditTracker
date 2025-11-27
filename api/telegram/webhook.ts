@@ -455,11 +455,28 @@ export default async function handler(req: any, res: any) {
 
     // Format and send response
     const responseMessage = formatCreditMessage(creditInfo);
+    
+    // Create inline button to open mini app with customer details
+    // Using web_app type ensures it opens in Telegram Mini App context (not browser)
+    const miniAppUrl = `${MINI_APP_URL}?customerId=${creditInfo.customerId}`;
+    const inlineKeyboard = [
+      [
+        {
+          text: '📱 View Customer Details',
+          web_app: {
+            url: miniAppUrl,
+          },
+        },
+      ],
+    ];
+    
+    console.log('Mini app URL for customer details:', miniAppUrl);
 
     await sendTelegramMessage(
       message.chat.id,
       responseMessage,
-      message.message_id
+      message.message_id,
+      inlineKeyboard
     );
 
     return res.status(200).json({ ok: true });
