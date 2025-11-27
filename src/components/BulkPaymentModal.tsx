@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Credit, AppSettings } from '../App';
 import { X, DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
-import { formatNumber } from '../utils/formatNumber';
+import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
 
 interface BulkPaymentModalProps {
   isOpen: boolean;
@@ -80,7 +80,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const amount = parseFloat(paymentAmount) || 0;
+    const amount = parseFormattedNumber(paymentAmount) || 0;
     
     if (amount < 0) {
       setError(t('enterValidAmount'));
@@ -131,7 +131,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
   }, [paymentAmount, eligibleCredits.length, totalOutstanding]);
 
   const handleApplyPayment = () => {
-    const amount = parseFloat(paymentAmount) || 0;
+    const amount = parseFormattedNumber(paymentAmount) || 0;
     
     if (amount <= 0) {
       setError(t('enterValidAmount'));
@@ -198,13 +198,10 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                   </div>
                 </div>
                 <input
-                  type="number"
+                  type="text"
                   value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  onChange={(e) => setPaymentAmount(formatInputNumber(e.target.value))}
                   placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  max={totalOutstanding}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xl"
                   autoFocus
                 />
@@ -214,10 +211,10 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                     {error}
                   </div>
                 )}
-                {!error && paymentAmount && parseFloat(paymentAmount) > 0 && (
+                {!error && paymentAmount && parseFormattedNumber(paymentAmount) > 0 && (
                   <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm">
                     <CheckCircle className="w-4 h-4" />
-                    {t('remaining')}: {formatNumber(totalOutstanding - (parseFloat(paymentAmount) || 0))} ETB
+                    {t('remaining')}: {formatNumber(totalOutstanding - (parseFormattedNumber(paymentAmount) || 0))} ETB
                   </div>
                 )}
                 <p className="text-sm text-gray-600 dark:text-gray-400 italic">

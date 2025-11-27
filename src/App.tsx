@@ -18,10 +18,11 @@ import { StaffManagement } from './components/StaffManagement';
 import { AllCredits } from './components/AllCredits';
 import { Customer, Credit, ShopInfo, Staff, AppSettings, AppState } from './types';
 import { User } from './types/auth';
-import { getCurrentUser, saveCurrentUser, clearCurrentUser, createUserWithPassword, authenticateUser, userExists, validatePassword, getTelegramUserId } from './lib/auth';
+import { getCurrentUser, saveCurrentUser, clearCurrentUser, createUserWithPassword, authenticateUser, userExists, validatePIN, getTelegramUserId } from './lib/auth';
 import { getTelegramUser } from './lib/telegram-debug';
 import { getUserData, saveUserData } from './lib/database';
 import { Send, AlertCircle, Lock } from 'lucide-react';
+import { validateEthiopianPhone } from './utils/phoneValidation';
 
 // Context for app state
 type AppContextType = {
@@ -46,12 +47,12 @@ const initialSettings: AppSettings = {
 };
 
 // Onboarding Component
-// Password Authentication Component
+// PIN Authentication Component
 function PasswordAuth({ onComplete }: { onComplete: () => void }) {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [errors, setErrors] = useState<{ password?: string; confirm?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ pin?: string; confirm?: string; general?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [telegramId, setTelegramId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
@@ -92,25 +93,25 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
 
     if (isCreating) {
       // Creating new account
-      if (!password.trim()) {
-        setErrors({ password: 'Password is required' });
+      if (!pin.trim()) {
+        setErrors({ pin: 'PIN is required' });
         return;
       }
 
-      const passwordValidation = validatePassword(password);
-      if (!passwordValidation.valid) {
-        setErrors({ password: passwordValidation.error });
+      const pinValidation = validatePIN(pin);
+      if (!pinValidation.valid) {
+        setErrors({ pin: pinValidation.error });
         return;
       }
 
-      if (password !== confirmPassword) {
-        setErrors({ confirm: 'Passwords do not match' });
+      if (pin !== confirmPin) {
+        setErrors({ confirm: 'PINs do not match' });
         return;
       }
 
       setIsSubmitting(true);
       try {
-        const user = await createUserWithPassword(telegramId, password);
+        const user = await createUserWithPassword(telegramId, pin);
         saveCurrentUser(user);
         setTimeout(() => {
           onComplete();
@@ -121,21 +122,21 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
       }
     } else {
       // Logging in
-      if (!password.trim()) {
-        setErrors({ password: 'Password is required' });
+      if (!pin.trim()) {
+        setErrors({ pin: 'PIN is required' });
         return;
       }
 
       setIsSubmitting(true);
       try {
-        const user = await authenticateUser(telegramId, password);
+        const user = await authenticateUser(telegramId, pin);
         if (user) {
           saveCurrentUser(user);
           setTimeout(() => {
             onComplete();
           }, 500);
         } else {
-          setErrors({ password: 'Incorrect password' });
+          setErrors({ pin: 'Incorrect PIN' });
           setIsSubmitting(false);
         }
       } catch (error) {
@@ -172,12 +173,12 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-gray-900 dark:text-white mb-2">
-            {isCreating ? 'Create Your Password' : 'Welcome Back'}
+            {isCreating ? 'Create Your PIN' : 'Welcome Back'}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             {isCreating
-              ? `Hello ${userName}! Create a password to secure your account`
-              : `Hello ${userName}! Enter your password to continue`
+              ? `Hello ${userName}! Create a 4-digit PIN to secure your account`
+              : `Hello ${userName}! Enter your PIN to continue`
             }
           </p>
         </div>
@@ -186,7 +187,7 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                Password
+                PIN
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -194,25 +195,30 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
                 </div>
                 <input
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isCreating ? "Create a password" : "Enter your password"}
-                  className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.password
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={pin}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    setPin(value);
+                  }}
+                  placeholder={isCreating ? "Enter 4-digit PIN" : "Enter your PIN"}
+                  className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.pin
                     ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
-                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400`}
+                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 text-center text-2xl tracking-widest`}
                   disabled={isSubmitting}
                 />
               </div>
-              {errors.password && (
+              {errors.pin && (
                 <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
                   <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{errors.password}</span>
+                  <span className="text-sm">{errors.pin}</span>
                 </div>
               )}
-              {isCreating && (
+              {isCreating && !errors.pin && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Password must be at least 6 characters long
+                  PIN must be exactly 4 digits
                 </p>
               )}
             </div>
@@ -220,7 +226,7 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
             {isCreating && (
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                  Confirm Password
+                  Confirm PIN
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -228,13 +234,18 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
                   </div>
                   <input
                     type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={confirmPin}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setConfirmPin(value);
+                    }}
+                    placeholder="Confirm your PIN"
                     className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.confirm
                       ? 'border-red-500 dark:border-red-500'
                       : 'border-gray-300 dark:border-gray-600'
-                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400`}
+                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 text-center text-2xl tracking-widest`}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -282,51 +293,42 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
   );
 }
 
+// Ethiopian Regions and Cities Data
+const ethiopianRegions: Record<string, string[]> = {
+  'Addis Ababa': ['Addis Ababa', 'Bole', 'Megenagna', 'Cazanchise', 'Merkato', 'Piazza', 'Arat Kilo', 'Saris', 'CMC', 'Kality', 'Nifas Silk', 'Gurd Shola', 'Lideta', 'Kirkos', 'Arada', 'Yeka', 'Bole Sub-city', 'Nifas Silk-Lafto', 'Kolfe Keranio', 'Gulele', 'Arada Sub-city'],
+  'Afar': ['Semera', 'Asaita', 'Dubti', 'Logiya', 'Awash', 'Gewane', 'Mille', 'Chifra', 'Elidar', 'Teru'],
+  'Amhara': ['Bahir Dar', 'Gondar', 'Dessie', 'Kombolcha', 'Debre Markos', 'Debre Birhan', 'Woldiya', 'Kemise', 'Shire', 'Debre Tabor', 'Finote Selam', 'Injibara', 'Nekemte', 'Assosa', 'Gambela'],
+  'Benishangul-Gumuz': ['Asosa', 'Assosa', 'Bambasi', 'Kurmuk', 'Menge', 'Sherkole', 'Tongo', 'Yaso'],
+  'Dire Dawa': ['Dire Dawa', 'Melka Jebdu', 'Gurgura', 'Harawe'],
+  'Gambela': ['Gambela', 'Itang', 'Pinyudo', 'Abobo', 'Gog', 'Jor', 'Lare', 'Wentawo'],
+  'Harari': ['Harar', 'Dire Dawa', 'Aweday', 'Babile', 'Fedis'],
+  'Oromia': ['Adama', 'Jimma', 'Bishoftu', 'Shashamane', 'Nazret', 'Ambo', 'Goba', 'Dembidolo', 'Nekemte', 'Gimbi', 'Shambu', 'Bale Robe', 'Ginir', 'Dodola', 'Asella', 'Batu', 'Ziway', 'Mojo', 'Sebeta', 'Holeta', 'Woliso', 'Welkite', 'Butajira', 'Worabe', 'Hossana', 'Wolaita Sodo', 'Arba Minch', 'Jinka', 'Konso', 'Turmi'],
+  'SNNPR': ['Hawassa', 'Arba Minch', 'Dilla', 'Sodo', 'Wolaita Sodo', 'Hossana', 'Butajira', 'Worabe', 'Shashemene', 'Yirgalem', 'Dila', 'Yabello', 'Moyale', 'Konso', 'Jinka', 'Turmi', 'Kibish', 'Mizan Teferi', 'Bonga', 'Tepi', 'Masha', 'Gore', 'Gambela'],
+  'Somali': ['Jijiga', 'Gode', 'Kebri Dehar', 'Degehabur', 'Shilabo', 'Warder', 'Kebri Beyah', 'Fik', 'Imi', 'Kelafo', 'Mustahil', 'Ferfer', 'Danan', 'Shinile', 'Aysha', 'Erer', 'Gursum', 'Babile', 'Harshin', 'Kebri Beyah'],
+  'Tigray': ['Mekelle', 'Adigrat', 'Axum', 'Shire', 'Humera', 'Adwa', 'Wukro', 'Alamata', 'Korem', 'Maychew', 'Abiy Adi', 'Endaselassie', 'Sheraro', 'Zalambessa', 'Edaga Hamus', 'Hagere Selam', 'Adet', 'Debre Damo', 'Yeha'],
+};
+
 // Shop Profile Setup Component
 function ShopProfileSetup({ onComplete }: { onComplete: (shopInfo: ShopInfo) => void }) {
   const [shopName, setShopName] = useState('');
   const [region, setRegion] = useState('');
   const [city, setCity] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [errors, setErrors] = useState<{ shopName?: string; region?: string; city?: string; phone?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  // Get cities for selected region
+  const availableCities = region ? (ethiopianRegions[region] || []) : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
-
-    const newErrors: { shopName?: string; region?: string; city?: string; phone?: string } = {};
-
-    if (!shopName.trim()) {
-      newErrors.shopName = 'Shop name is required';
-    }
-
-    if (!region.trim()) {
-      newErrors.region = 'Region is required';
-    }
-
-    if (!city.trim()) {
-      newErrors.city = 'City is required';
-    }
-
-    if (!phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
     setIsSubmitting(true);
 
     const shopInfo: ShopInfo = {
-      name: shopName.trim(),
-      region: region.trim(),
-      city: city.trim(),
-      phone: phone.trim(),
-      email: email.trim() || undefined,
+      name: shopName.trim() || '',
+      region: region || '',
+      city: city || '',
+      phone: phone.trim() || '',
     };
 
     setTimeout(() => {
@@ -353,108 +355,100 @@ function ShopProfileSetup({ onComplete }: { onComplete: (shopInfo: ShopInfo) => 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                Shop/Business Name *
+                Shop/Business Name
               </label>
               <input
                 type="text"
                 value={shopName}
                 onChange={(e) => setShopName(e.target.value)}
                 placeholder="e.g., Ahmed's Electronics"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.shopName
-                  ? 'border-red-500 dark:border-red-500'
-                  : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400`}
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400"
                 disabled={isSubmitting}
               />
-              {errors.shopName && (
-                <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{errors.shopName}</span>
-                </div>
-              )}
             </div>
 
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                Region/State *
+                Region
               </label>
-              <input
-                type="text"
+              <select
                 value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                placeholder="e.g., Addis Ababa"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.region
-                  ? 'border-red-500 dark:border-red-500'
-                  : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400`}
+                onChange={(e) => {
+                  setRegion(e.target.value);
+                  setCity(''); // Reset city when region changes
+                }}
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
                 disabled={isSubmitting}
-              />
-              {errors.region && (
-                <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{errors.region}</span>
-                </div>
-              )}
+              >
+                <option value="">Select Region</option>
+                {Object.keys(ethiopianRegions).map((reg) => (
+                  <option key={reg} value={reg}>
+                    {reg}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                City *
+                City
               </label>
-              <input
-                type="text"
+              <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g., Bole"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.city
-                  ? 'border-red-500 dark:border-red-500'
-                  : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400`}
-                disabled={isSubmitting}
-              />
-              {errors.city && (
-                <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{errors.city}</span>
-                </div>
-              )}
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting || !region}
+              >
+                <option value="">{region ? 'Select City' : 'Select Region first'}</option>
+                {availableCities.map((cityName) => (
+                  <option key={cityName} value={cityName}>
+                    {cityName}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                Shop Phone Number *
+                Shop Phone Number
               </label>
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+251912345678"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.phone
-                  ? 'border-red-500 dark:border-red-500'
-                  : 'border-gray-300 dark:border-gray-600'
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setPhone(value);
+                  if (phoneError) {
+                    const validation = validateEthiopianPhone(value);
+                    if (validation.isValid) {
+                      setPhoneError(null);
+                    } else {
+                      setPhoneError(validation.error || null);
+                    }
+                  }
+                }}
+                onBlur={() => {
+                  if (phone) {
+                    const validation = validateEthiopianPhone(phone);
+                    if (!validation.isValid) {
+                      setPhoneError(validation.error || null);
+                    }
+                  }
+                }}
+                placeholder="+251912345678 or 0912345678"
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${phoneError ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
                   } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400`}
                 disabled={isSubmitting}
               />
-              {errors.phone && (
+              {phoneError && (
                 <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
                   <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{errors.phone}</span>
+                  <span className="text-sm">{phoneError}</span>
                 </div>
               )}
-            </div>
-
-            <div>
-              <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                Email (Optional)
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="shop@example.com"
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400"
-                disabled={isSubmitting}
-              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Only Ethiopian phone numbers allowed (+251 or 0...)
+              </p>
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

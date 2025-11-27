@@ -117,16 +117,20 @@ export async function userExists(telegramId: string): Promise<boolean> {
 }
 
 /**
- * Validate password strength
+ * Validate PIN (4 digits only)
  */
-export function validatePassword(password: string): { valid: boolean; error?: string } {
-  if (password.length < 6) {
-    return { valid: false, error: 'Password must be at least 6 characters' };
-  }
-  if (password.length > 100) {
-    return { valid: false, error: 'Password must be less than 100 characters' };
+export function validatePIN(pin: string): { valid: boolean; error?: string } {
+  if (!/^\d{4}$/.test(pin)) {
+    return { valid: false, error: 'PIN must be exactly 4 digits' };
   }
   return { valid: true };
+}
+
+/**
+ * Validate password strength (kept for backward compatibility, but using PIN now)
+ */
+export function validatePassword(password: string): { valid: boolean; error?: string } {
+  return validatePIN(password);
 }
 
 /**

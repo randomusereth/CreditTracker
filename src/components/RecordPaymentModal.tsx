@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, DollarSign, Save, AlertCircle } from 'lucide-react';
 import { Credit, AppSettings, PaymentRecord } from '../App';
-import { formatNumber } from '../utils/formatNumber';
+import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
 
 interface RecordPaymentModalProps {
   isOpen: boolean;
@@ -54,7 +54,7 @@ export function RecordPaymentModal({
   const totalOutstanding = credit.remainingAmount;
 
   const handleSave = () => {
-    const amount = parseFloat(paymentAmount);
+    const amount = parseFormattedNumber(paymentAmount);
 
     if (isNaN(amount) || amount <= 0) {
       alert('Please enter a valid payment amount');
@@ -141,13 +141,11 @@ export function RecordPaymentModal({
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-600 dark:text-green-400" />
                   <input
-                    type="number"
+                    type="text"
                     id="paymentAmount"
                     value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    onChange={(e) => setPaymentAmount(formatInputNumber(e.target.value))}
                     placeholder={t('paymentAmountPlaceholder')}
-                    step="0.01"
-                    min="0"
                     autoFocus
                     className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-green-300 dark:border-green-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                   />

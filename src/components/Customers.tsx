@@ -44,10 +44,14 @@ export function Customers({ customers, credits, onAddCustomer, onViewCustomer, s
   const t = (key: string) => translations[settings?.language || 'en']?.[key] || translations['en'][key];
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm)
-  );
+  const filteredCustomers = customers.filter(customer => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    if (!searchLower) return true;
+    return (
+      customer.name.toLowerCase().includes(searchLower) ||
+      customer.phone.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, ''))
+    );
+  });
 
   const getCustomerStats = (customerId: string) => {
     const customerCredits = credits.filter(c => c.customerId === customerId);

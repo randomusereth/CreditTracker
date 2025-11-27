@@ -31,6 +31,7 @@ const translations: Record<string, Record<string, string>> = {
     quickActions: 'Quick Actions',
     phoneCall: 'Phone Call',
     sms: 'SMS',
+    sendReminder: 'Send Reminder',
     exportAll: 'Export All',
     addCredit: 'Add Credit',
     recordPayment: 'Record Payment',
@@ -78,9 +79,10 @@ const translations: Record<string, Record<string, string>> = {
     quickActions: 'ፈጣን እርምጃዎች',
     phoneCall: 'ስልክ ደውል',
     sms: 'ኤስ ኤም ኤስ',
+    sendReminder: 'ማስታወሻሻ ላክ',
     exportAll: 'ሁሉንም ላክ',
     addCredit: 'ብድር ጨምር',
-    recordPayment: 'የክፈል ደረጃ ደርጋ',
+    recordPayment: 'ብድር ቀንስ',
     editCustomer: 'ደንበኛ አርትዕ',
     deleteCustomer: 'ደንበኛ ሰርዝ',
     creditHistory: 'የብድር ታሪክ',
@@ -185,10 +187,29 @@ export function CustomerDetails({
   const hasActiveFilters = statusFilter !== 'all' || amountFilter !== 'none' || startDate || endDate;
 
   const handleSendReminder = (method: 'telegram' | 'sms') => {
-    const message = `Hello ${customer.name},\\n\\nThis is a friendly reminder about your outstanding credit balance of ${totalUnpaid.toFixed(2)} ETB.\\n\\nThank you for your business!`;
-    alert(method === 'telegram'
-      ? `Telegram message prepared:\\n\\n${message}\\n\\nThis would integrate with Telegram API to send the message.`
-      : `SMS message prepared:\\n\\n${message}\\n\\nThis would integrate with SMS service to send the message to ${customer.phone}.`);
+    // Get unpaid credits details (all unpaid credits, not filtered)
+    const unpaidCredits = credits.filter(c => c.status !== 'paid');
+    const unpaidCount = unpaidCredits.length;
+    const totalUnpaidAmount = unpaidCredits.reduce((sum, c) => sum + c.remainingAmount, 0);
+
+    // Build detailed message
+    let message = ``;
+
+    if (unpaidCount === 0) {
+      message += 'ያልተከፈለ ብድር የለቦትም እናመሰግናለን';
+    } else {
+      message += `ያልተከፈል ብር መጠን = ${formatNumber(totalUnpaidAmount)} ብር\n`;
+
+    }
+
+    if (method === 'sms') {
+      // Open SMS app with pre-filled message
+      const smsUrl = `sms:${customer.phone}?body=${encodeURIComponent(message)}`;
+      window.location.href = smsUrl;
+    } else {
+      // Telegram integration (for future)
+      alert(`Telegram message prepared:\n\n${message}\n\nThis would integrate with Telegram API to send the message.`);
+    }
   };
 
   const handleExportPDF = () => {
@@ -462,7 +483,7 @@ export function CustomerDetails({
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Send className="w-5 h-5" />
-            {t('sms')}
+            {t('sendReminder')}
           </button>
         </div>
       </div>

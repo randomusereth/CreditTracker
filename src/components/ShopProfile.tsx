@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react';
 import { ShopInfo } from '../App';
-import { Store, MapPin, Phone, Mail, Save } from 'lucide-react';
+import { Store, MapPin, Phone, Save, AlertCircle } from 'lucide-react';
+import { validateEthiopianPhone } from '../utils/phoneValidation';
+
+// Ethiopian Regions and Cities Data
+const ethiopianRegions: Record<string, string[]> = {
+  'Addis Ababa': ['Addis Ababa', 'Bole', 'Megenagna', 'Cazanchise', 'Merkato', 'Piazza', 'Arat Kilo', 'Saris', 'CMC', 'Kality', 'Nifas Silk', 'Gurd Shola', 'Lideta', 'Kirkos', 'Arada', 'Yeka', 'Bole Sub-city', 'Nifas Silk-Lafto', 'Kolfe Keranio', 'Gulele', 'Arada Sub-city'],
+  'Afar': ['Semera', 'Asaita', 'Dubti', 'Logiya', 'Awash', 'Gewane', 'Mille', 'Chifra', 'Elidar', 'Teru'],
+  'Amhara': ['Bahir Dar', 'Gondar', 'Dessie', 'Kombolcha', 'Debre Markos', 'Debre Birhan', 'Woldiya', 'Kemise', 'Shire', 'Debre Tabor', 'Finote Selam', 'Injibara', 'Nekemte', 'Assosa', 'Gambela'],
+  'Benishangul-Gumuz': ['Asosa', 'Assosa', 'Bambasi', 'Kurmuk', 'Menge', 'Sherkole', 'Tongo', 'Yaso'],
+  'Dire Dawa': ['Dire Dawa', 'Melka Jebdu', 'Gurgura', 'Harawe'],
+  'Gambela': ['Gambela', 'Itang', 'Pinyudo', 'Abobo', 'Gog', 'Jor', 'Lare', 'Wentawo'],
+  'Harari': ['Harar', 'Dire Dawa', 'Aweday', 'Babile', 'Fedis'],
+  'Oromia': ['Adama', 'Jimma', 'Bishoftu', 'Shashamane', 'Nazret', 'Ambo', 'Goba', 'Dembidolo', 'Nekemte', 'Gimbi', 'Shambu', 'Bale Robe', 'Ginir', 'Dodola', 'Asella', 'Batu', 'Ziway', 'Mojo', 'Sebeta', 'Holeta', 'Woliso', 'Welkite', 'Butajira', 'Worabe', 'Hossana', 'Wolaita Sodo', 'Arba Minch', 'Jinka', 'Konso', 'Turmi'],
+  'SNNPR': ['Hawassa', 'Arba Minch', 'Dilla', 'Sodo', 'Wolaita Sodo', 'Hossana', 'Butajira', 'Worabe', 'Shashemene', 'Yirgalem', 'Dila', 'Yabello', 'Moyale', 'Konso', 'Jinka', 'Turmi', 'Kibish', 'Mizan Teferi', 'Bonga', 'Tepi', 'Masha', 'Gore', 'Gambela'],
+  'Somali': ['Jijiga', 'Gode', 'Kebri Dehar', 'Degehabur', 'Shilabo', 'Warder', 'Kebri Beyah', 'Fik', 'Imi', 'Kelafo', 'Mustahil', 'Ferfer', 'Danan', 'Shinile', 'Aysha', 'Erer', 'Gursum', 'Babile', 'Harshin', 'Kebri Beyah'],
+  'Tigray': ['Mekelle', 'Adigrat', 'Axum', 'Shire', 'Humera', 'Adwa', 'Wukro', 'Alamata', 'Korem', 'Maychew', 'Abiy Adi', 'Endaselassie', 'Sheraro', 'Zalambessa', 'Edaga Hamus', 'Hagere Selam', 'Adet', 'Debre Damo', 'Yeha'],
+};
 
 interface ShopProfileProps {
   shopInfo: ShopInfo | null;
@@ -13,13 +29,20 @@ export function ShopProfile({ shopInfo, onUpdateShopInfo }: ShopProfileProps) {
     region: '',
     city: '',
     phone: '',
-    email: '',
   });
   const [saved, setSaved] = useState(false);
 
+  // Get cities for selected region
+  const availableCities = formData.region ? (ethiopianRegions[formData.region] || []) : [];
+
   useEffect(() => {
     if (shopInfo) {
-      setFormData(shopInfo);
+      setFormData({
+        name: shopInfo.name || '',
+        region: shopInfo.region || '',
+        city: shopInfo.city || '',
+        phone: shopInfo.phone || '',
+      });
     }
   }, [shopInfo]);
 
@@ -51,11 +74,10 @@ export function ShopProfile({ shopInfo, onUpdateShopInfo }: ShopProfileProps) {
           <div>
             <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
               <Store className="w-4 h-4" />
-              Business Name *
+              Business Name
             </label>
             <input
               type="text"
-              required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
@@ -67,61 +89,86 @@ export function ShopProfile({ shopInfo, onUpdateShopInfo }: ShopProfileProps) {
             <div>
               <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
                 <MapPin className="w-4 h-4" />
-                Region *
+                Region
               </label>
-              <input
-                type="text"
-                required
+              <select
                 value={formData.region}
-                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, region: e.target.value, city: '' });
+                }}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                placeholder="e.g., Addis Ababa"
-              />
+              >
+                <option value="">Select Region</option>
+                {Object.keys(ethiopianRegions).map((reg) => (
+                  <option key={reg} value={reg}>
+                    {reg}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
               <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
                 <MapPin className="w-4 h-4" />
-                City *
+                City
               </label>
-              <input
-                type="text"
-                required
+              <select
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                placeholder="e.g., Bole"
-              />
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!formData.region}
+              >
+                <option value="">{formData.region ? 'Select City' : 'Select Region first'}</option>
+                {availableCities.map((cityName) => (
+                  <option key={cityName} value={cityName}>
+                    {cityName}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           <div>
             <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
               <Phone className="w-4 h-4" />
-              Phone Number *
+              Phone Number
             </label>
             <input
               type="tel"
-              required
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-              placeholder="+251..."
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({ ...formData, phone: value });
+                if (phoneError) {
+                  const validation = validateEthiopianPhone(value);
+                  if (validation.isValid) {
+                    setPhoneError(null);
+                  } else {
+                    setPhoneError(validation.error || null);
+                  }
+                }
+              }}
+              onBlur={() => {
+                if (formData.phone) {
+                  const validation = validateEthiopianPhone(formData.phone);
+                  if (!validation.isValid) {
+                    setPhoneError(validation.error || null);
+                  }
+                }
+              }}
+              className={`w-full px-4 py-2 border ${phoneError ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white`}
+              placeholder="+251912345678 or 0912345678"
             />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
-              <Mail className="w-4 h-4" />
-              Email (Optional)
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-              placeholder="business@email.com"
-            />
+            {phoneError && (
+              <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{phoneError}</span>
+              </div>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Only Ethiopian phone numbers allowed (+251 or 0...)
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -166,14 +213,6 @@ export function ShopProfile({ shopInfo, onUpdateShopInfo }: ShopProfileProps) {
                 <p className="text-blue-700 dark:text-blue-300">{shopInfo.phone}</p>
               </div>
             </div>
-            {shopInfo.email && (
-              <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-                <div>
-                  <p className="text-blue-700 dark:text-blue-300">{shopInfo.email}</p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, User, Phone, Upload } from 'lucide-react';
+import { ArrowLeft, User, Phone, Upload, AlertCircle } from 'lucide-react';
 import { Customer } from '../App';
+import { validateEthiopianPhone } from '../utils/phoneValidation';
+import { ContactPickerModal } from './ContactPickerModal';
 
 type AddCustomerProps = {
   onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt'>) => void;
@@ -10,6 +12,20 @@ type AddCustomerProps = {
 export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProps) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [showContactPicker, setShowContactPicker] = useState(false);
+
+  const handlePhoneChange = (value: string) => {
+    setPhone(value);
+    if (phoneError) {
+      const validation = validateEthiopianPhone(value);
+      if (validation.isValid) {
+        setPhoneError(null);
+      } else {
+        setPhoneError(validation.error || null);
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,13 +33,27 @@ export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProp
       alert('Please fill in all fields');
       return;
     }
+
+    // Validate phone number
+    const phoneValidation = validateEthiopianPhone(phone);
+    if (!phoneValidation.isValid) {
+      setPhoneError(phoneValidation.error || 'Invalid phone number');
+      return;
+    }
+
+    setPhoneError(null);
     onAddCustomer({ name: name.trim(), phone: phone.trim() });
   };
 
   const handleImportFromContacts = () => {
-    // In a real app, this would use the Contacts API
-    // For now, we'll just show an alert
-    alert('Contact import feature would be available on mobile devices with proper permissions');
+    setShowContactPicker(true);
+  };
+
+  const handleSelectContact = (contactName: string, contactPhone: string) => {
+    setName(contactName);
+    setPhone(contactPhone);
+    setPhoneError(null);
+    setShowContactPicker(false);
   };
 
   return (
@@ -75,12 +105,23 @@ export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProp
                 type="tel"
                 id="phone"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter phone number"
-                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="+251912345678 or 0912345678"
+                className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border ${
+                  phoneError ? 'border-red-500 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'
+                } rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 required
               />
             </div>
+            {phoneError && (
+              <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{phoneError}</span>
+              </div>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Only Ethiopian phone numbers allowed (+251 or 0...)
+            </p>
           </div>
         </div>
 
@@ -116,6 +157,13 @@ export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProp
           </button>
         </div>
       </form>
+
+      {/* Contact Picker Modal */}
+      <ContactPickerModal
+        isOpen={showContactPicker}
+        onClose={() => setShowContactPicker(false)}
+        onSelectContact={handleSelectContact}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, User, Package, FileText, DollarSign, Percent, UserPlus } from 'lucide-react';
+import { ArrowLeft, User, Package, FileText, DollarSign, Percent, UserPlus, AlertCircle } from 'lucide-react';
 import { Customer, Credit } from '../App';
-import { formatNumber } from '../utils/formatNumber';
+import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
+import { validateEthiopianPhone } from '../utils/phoneValidation';
 
 type AddCreditProps = {
   customers: Customer[];
@@ -21,6 +22,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
   const [newCustomerAddress, setNewCustomerAddress] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +32,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
       return;
     }
 
-    const total = parseFloat(totalAmount);
+    const total = parseFormattedNumber(totalAmount);
     if (isNaN(total) || total <= 0) {
       alert('Please enter a valid amount');
       return;
@@ -38,7 +40,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
 
     let paid = 0;
     if (paidAmount) {
-      const value = parseFloat(paidAmount);
+      const value = parseFormattedNumber(paidAmount);
       if (!isNaN(value) && value >= 0) {
         paid = Math.min(value, total);
       }
@@ -61,15 +63,39 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
       return;
     }
 
+    // Validate phone number
+    const phoneValidation = validateEthiopianPhone(newCustomerPhone);
+    if (!phoneValidation.isValid) {
+      setPhoneError(phoneValidation.error || 'Invalid phone number');
+      return;
+    }
+
+    setPhoneError(null);
+
     const newCustomerId = onAddCustomer?.({
       name: newCustomerName,
-      phone: newCustomerPhone,
+      phone: newCustomerPhone.trim(),
       address: newCustomerAddress,
     });
 
     if (newCustomerId) {
       setCustomerId(newCustomerId);
       setShowNewCustomerModal(false);
+      setNewCustomerName('');
+      setNewCustomerPhone('');
+      setNewCustomerAddress('');
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setNewCustomerPhone(value);
+    if (phoneError) {
+      const validation = validateEthiopianPhone(value);
+      if (validation.isValid) {
+        setPhoneError(null);
+      } else {
+        setPhoneError(validation.error || null);
+      }
     }
   };
 
@@ -151,13 +177,11 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-                type="number"
+                type="text"
                 id="totalAmount"
                 value={totalAmount}
-                onChange={(e) => setTotalAmount(e.target.value)}
+                onChange={(e) => setTotalAmount(formatInputNumber(e.target.value))}
                 placeholder="0.00"
-                step="0.01"
-                min="0"
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -173,13 +197,11 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600 dark:text-blue-400" />
               <input
-                type="number"
+                type="text"
                 id="paidAmount"
                 value={paidAmount}
-                onChange={(e) => setPaidAmount(e.target.value)}
+                onChange={(e) => setPaidAmount(formatInputNumber(e.target.value))}
                 placeholder="0.00"
-                step="0.01"
-                min="0"
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-blue-300 dark:border-blue-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -284,14 +306,25 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 Phone *
               </label>
               <input
-                type="text"
+                type="tel"
                 id="newCustomerPhone"
                 value={newCustomerPhone}
-                onChange={(e) => setNewCustomerPhone(e.target.value)}
-                placeholder="Enter customer phone number"
-                className="w-full pl-4 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="+251912345678 or 0912345678"
+                className={`w-full pl-4 pr-4 py-3 bg-white dark:bg-gray-700 border ${
+                  phoneError ? 'border-red-500 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'
+                } rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 required
               />
+              {phoneError && (
+                <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">{phoneError}</span>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Only Ethiopian phone numbers allowed (+251 or 0...)
+              </p>
             </div>
             <div>
               <label htmlFor="newCustomerAddress" className="block text-sm text-gray-700 dark:text-gray-300 mb-2">

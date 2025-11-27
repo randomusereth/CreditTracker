@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Customer, Credit, AppSettings, PaymentRecord } from '../types';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Users, CreditCard as CreditCardIcon, AlertCircle, Clock } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Users, CreditCard as CreditCardIcon, AlertCircle, Clock, Search, User, Phone } from 'lucide-react';
 import { CreditDetailsModal } from './CreditDetailsModal';
 import { formatNumber } from '../utils/formatNumber';
 
@@ -87,6 +87,9 @@ const translations: Record<string, Record<string, string>> = {
 export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, settings, onUpdateCredit, onChangeCustomer, onNavigateToCustomer }: DashboardProps) {
   const t = (key: string) => translations[settings.language][key] || key;
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const totalCredits = credits.reduce((sum, c) => sum + c.totalAmount, 0);
   const totalPaid = credits.reduce((sum, c) => sum + c.paidAmount, 0);
@@ -118,6 +121,37 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
   const recentPayments = allPayments
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 10);
+
+  // Filter customers for search suggestions
+  const filteredCustomers = searchTerm.trim()
+    ? customers.filter(customer => {
+      const searchLower = searchTerm.toLowerCase().trim();
+      return (
+        customer.name.toLowerCase().includes(searchLower) ||
+        customer.phone.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, ''))
+      );
+    }).slice(0, 5) // Limit to 5 suggestions
+    : [];
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleCustomerSelect = (customerId: string) => {
+    setSearchTerm('');
+    setShowSuggestions(false);
+    onViewCustomer(customerId);
+  };
 
   const renderStatCard = (label: string, value: string, icon: any, color: 'blue' | 'green' | 'red' | 'purple', trend?: 'up') => {
     const Icon = icon;
@@ -215,19 +249,66 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
         </div>
       </div>
 
-      {/* Unpaid Credits Alert */}
-      {unpaidCount > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
-            <div>
-              <p className="text-amber-900 dark:text-amber-100">
-                You have {unpaidCount} {unpaidCount === 1 ? 'credit' : 'credits'} that {unpaidCount === 1 ? 'is' : 'are'} unpaid or partially paid.
-              </p>
+      {/* Customer Search */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4" ref={searchRef}>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search customers by name or phone..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => {
+              if (filteredCustomers.length > 0) {
+                setShowSuggestions(true);
+              }
+            }}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {/* Autocomplete Suggestions */}
+          {showSuggestions && filteredCustomers.length > 0 && (
+            <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+              {filteredCustomers.map((customer) => {
+                const customerCredits = credits.filter(c => c.customerId === customer.id);
+                const totalUnpaid = customerCredits.reduce((sum, c) => sum + c.remainingAmount, 0);
+                return (
+                  <button
+                    key={customer.id}
+                    onClick={() => handleCustomerSelect(customer.id)}
+                    className="w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-900 dark:text-white font-medium truncate">
+                          {customer.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Phone className="w-3 h-3 text-gray-400" />
+                          <p className="text-gray-600 dark:text-gray-400 text-sm truncate">
+                            {customer.phone}
+                          </p>
+                        </div>
+                        {totalUnpaid > 0 && (
+                          <p className="text-red-600 dark:text-red-400 text-xs mt-1">
+                            {formatNumber(totalUnpaid)} ETB unpaid
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Empty State for New Users */}
       {isNewUser && (
