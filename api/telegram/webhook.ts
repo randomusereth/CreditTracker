@@ -278,34 +278,58 @@ export default async function handler(req: any, res: any) {
 
   // Verify bot token is set
   if (!BOT_TOKEN) {
-    console.error('TELEGRAM_BOT_TOKEN environment variable is not set');
-    return res.status(500).json({ error: 'Bot token not configured' });
+    const errorMsg = 'TELEGRAM_BOT_TOKEN environment variable is not set';
+    console.error(errorMsg);
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('TELEGRAM') || k.includes('SUPABASE')));
+    return res.status(500).json({ 
+      error: 'Bot token not configured',
+      details: 'TELEGRAM_BOT_TOKEN environment variable is missing. Please add it in Vercel Dashboard → Settings → Environment Variables'
+    });
   }
 
   // Verify Supabase is configured
   if (!supabase) {
-    console.error('Supabase environment variables are not set');
-    return res.status(500).json({ error: 'Database not configured' });
+    const errorMsg = 'Supabase environment variables are not set';
+    console.error(errorMsg);
+    console.error('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+    console.error('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+    console.error('VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL ? 'Set' : 'Missing');
+    console.error('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+    return res.status(500).json({ 
+      error: 'Database not configured',
+      details: 'SUPABASE_URL and SUPABASE_ANON_KEY must be set in Vercel Dashboard (without VITE_ prefix for API routes)'
+    });
   }
 
   try {
+    // Log request for debugging
+    console.log('Webhook received - Method:', req.method);
+    console.log('Request body type:', typeof req.body);
+    console.log('Request body keys:', req.body ? Object.keys(req.body) : 'null/undefined');
+    
     // Parse request body - Vercel serverless functions may send body as string
     let update: TelegramUpdate;
     
     if (typeof req.body === 'string') {
       try {
         update = JSON.parse(req.body);
-      } catch (parseError) {
-        console.error('Failed to parse request body:', parseError);
-        console.error('Request body:', req.body);
-        return res.status(400).json({ error: 'Invalid JSON in request body' });
+        console.log('Parsed body from string');
+      } catch (parseError: any) {
+        console.error('Failed to parse request body:', parseError?.message);
+        console.error('Request body (first 500 chars):', req.body?.substring(0, 500));
+        return res.status(400).json({ error: 'Invalid JSON in request body', details: parseError?.message });
       }
     } else if (req.body && typeof req.body === 'object') {
       update = req.body;
+      console.log('Using body as object');
     } else {
       console.error('Unexpected request body type:', typeof req.body);
-      return res.status(400).json({ error: 'Invalid request body' });
+      console.error('Request body value:', req.body);
+      return res.status(400).json({ error: 'Invalid request body', details: `Expected string or object, got ${typeof req.body}` });
     }
+    
+    console.log('Update ID:', update?.update_id);
+    console.log('Has message:', !!update?.message);
 
     // Check if this is a message update
     if (!update || !update.message || !update.message.text) {
