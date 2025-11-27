@@ -261,21 +261,19 @@ function formatCreditMessage(info: CustomerCreditInfo): string {
   const { customerName, totalCredits, totalPaid, totalOutstanding, unpaidCount, partiallyPaidCount } = info;
 
   let message = `📊 *Credit Information*\n\n`;
-  message += `👤 *Customer:* ${customerName}\n\n`;
-  message += `💰 *Total Credits:* ${totalCredits.toFixed(2)} ETB\n`;
-  message += `✅ *Total Paid:* ${totalPaid.toFixed(2)} ETB\n`;
-  message += `⚠️ *Outstanding:* ${totalOutstanding.toFixed(2)} ETB\n\n`;
+  message += `👤 *ደንበኛደንበኛ:* ${customerName}\n\n`;
+  message += `💰 *ጠቅላላ የብድር መጠንመጠን:* ${totalCredits.toFixed(2)} ETB\n`;
+  message += `✅ *እስካሁን የተከፈለየተከፈለ:* ${totalPaid.toFixed(2)} ETB\n`;
+  message += `⚠️ *ቀሪቀሪ:* ${totalOutstanding.toFixed(2)} ETB\n\n`;
 
   if (unpaidCount > 0 || partiallyPaidCount > 0) {
     message += `📋 *Summary:*\n`;
     if (unpaidCount > 0) {
-      message += `• Unpaid: ${unpaidCount}\n`;
+      message += `• ያልተከፈለ የብድር ብዛትብዛት: ${unpaidCount}\n`;
     }
-    if (partiallyPaidCount > 0) {
-      message += `• Partially Paid: ${partiallyPaidCount}\n`;
-    }
+    
   } else {
-    message += `✅ All credits are paid!`;
+    message += `✅ ሁሉም እዳዎች ተከፍለዋልተከፍለዋል!`;
   }
 
   return message;
@@ -453,16 +451,18 @@ export default async function handler(req: any, res: any) {
     const responseMessage = formatCreditMessage(creditInfo);
     
     // Create inline button to open mini app
+    // Use URL button that opens the mini app with customerId parameter
+    const miniAppUrl = `${MINI_APP_URL}?customerId=${creditInfo.customerId}`;
     const inlineKeyboard = [
       [
         {
           text: '📱 View Details in Mini App',
-          web_app: {
-            url: `${MINI_APP_URL}?customerId=${creditInfo.customerId}`,
-          },
+          url: miniAppUrl,
         },
       ],
     ];
+    
+    console.log('Mini app URL:', miniAppUrl);
 
     await sendTelegramMessage(
       message.chat.id,
