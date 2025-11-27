@@ -26,20 +26,31 @@ The bot allows shop owners to:
 
 ### 2. Set Environment Variables in Vercel
 
+**⚠️ IMPORTANT: You MUST add these in Vercel Dashboard (not just .env.local)**
+
 Go to your Vercel project dashboard → Settings → Environment Variables and add:
 
+**For the API route (serverless function) - REQUIRED:**
 ```
 TELEGRAM_BOT_TOKEN=your_bot_token_here
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-MINI_APP_URL=https://your-app.vercel.app
-```
-
-**Note**: For the API route, you also need to add these without the `VITE_` prefix:
-```
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+MINI_APP_URL=https://your-actual-vercel-url.vercel.app
 ```
+
+**For the frontend (React app) - Also add:**
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+**Why two sets?**
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` (no prefix) = Used by API route (backend)
+- `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (with VITE_ prefix) = Used by frontend (client-side)
+
+**Note:** `.env.local` is optional and only for local development. The webhook runs on Vercel, so Vercel Dashboard variables are REQUIRED.
+
+**See `ENV_VARIABLES_GUIDE.md` for detailed explanation.**
 
 ### 3. Set Webhook URL
 
