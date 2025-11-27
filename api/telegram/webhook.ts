@@ -260,7 +260,6 @@ async function getUserIdFromTelegramId(telegramId: string): Promise<string | nul
 function formatNumberWithCommas(num: number): string {
   return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-
 /**
  * Format credit info message
  */
