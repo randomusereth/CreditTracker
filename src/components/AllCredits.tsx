@@ -427,6 +427,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                     placeholder="Enter amount"
                     value={amountValue}
                     onChange={(e) => setAmountValue(e.target.value)}
+                    step="0.01"
+                    min="0"
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                   />
                 )}
@@ -438,6 +440,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                       placeholder={t('from')}
                       value={amountFrom}
                       onChange={(e) => setAmountFrom(e.target.value)}
+                      step="0.01"
+                      min="0"
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                     />
                     <input
@@ -445,6 +449,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                       placeholder={t('to')}
                       value={amountTo}
                       onChange={(e) => setAmountTo(e.target.value)}
+                      step="0.01"
+                      min="0"
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                     />
                   </div>
