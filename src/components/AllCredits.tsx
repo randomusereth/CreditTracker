@@ -84,6 +84,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
   const [amountValue, setAmountValue] = useState('');
   const [amountFrom, setAmountFrom] = useState('');
   const [amountTo, setAmountTo] = useState('');
+  const [dateFilterType, setDateFilterType] = useState<'single' | 'range'>('single');
+  const [singleDate, setSingleDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
@@ -122,7 +124,12 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
     }
 
     // Date filter
-    if (startDate || endDate) {
+    if (dateFilterType === 'single' && singleDate) {
+      const creditDate = new Date(credit.date);
+      const filterDate = new Date(singleDate);
+      // Check if same day
+      if (creditDate.toDateString() !== filterDate.toDateString()) return false;
+    } else if (dateFilterType === 'range' && (startDate || endDate)) {
       const creditDate = new Date(credit.date);
       if (startDate && new Date(startDate) > creditDate) return false;
       if (endDate && new Date(endDate) < creditDate) return false;
@@ -136,12 +143,13 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
     setAmountValue('');
     setAmountFrom('');
     setAmountTo('');
+    setSingleDate('');
     setStartDate('');
     setEndDate('');
     setSearchTerm('');
   };
 
-  const hasActiveFilters = amountFilter !== 'none' || startDate || endDate || searchTerm;
+  const hasActiveFilters = amountFilter !== 'none' || singleDate || (dateFilterType === 'range' && (startDate || endDate)) || searchTerm;
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -331,14 +339,6 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
             </p>
           </div>
         </div>
-        <button
-          onClick={handleExportPDF}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          title="Export all credits to PDF for backup"
-        >
-          <Download className="w-5 h-5" />
-          <span>{t('exportPDF')}</span>
-        </button>
       </div>
 
       {/* Search and Filter Bar */}
@@ -455,26 +455,59 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
             {/* Date Filter */}
             <div>
               <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('filterByDate')}</label>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('startDate')}</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('endDate')}</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
+              <div className="mb-3">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDateFilterType('single')}
+                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'single'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                  >
+                    Single Day
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDateFilterType('range')}
+                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'range'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                  >
+                    Date Range
+                  </button>
                 </div>
               </div>
+              {dateFilterType === 'single' ? (
+                <input
+                  type="date"
+                  value={singleDate}
+                  onChange={(e) => setSingleDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                />
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('startDate')}</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('endDate')}</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

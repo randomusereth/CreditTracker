@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Customer, Credit, AppSettings, PaymentRecord } from '../App';
-import { ArrowLeft, Phone, MessageSquare, Send, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet } from 'lucide-react';
+import { ArrowLeft, Phone, MessageSquare, Send, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet, Minus } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { CreditDetailsModal } from './CreditDetailsModal';
@@ -143,6 +143,8 @@ export function CustomerDetails({
   const [amountValue, setAmountValue] = useState('');
   const [amountFrom, setAmountFrom] = useState('');
   const [amountTo, setAmountTo] = useState('');
+  const [dateFilterType, setDateFilterType] = useState<'single' | 'range'>('single');
+  const [singleDate, setSingleDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [editingCustomer, setEditingCustomer] = useState(false);
@@ -162,7 +164,12 @@ export function CustomerDetails({
         if (amount < parseFloat(amountFrom) || amount > parseFloat(amountTo)) return false;
       }
     }
-    if (startDate || endDate) {
+    if (dateFilterType === 'single' && singleDate) {
+      const creditDate = new Date(credit.date);
+      const filterDate = new Date(singleDate);
+      // Check if same day
+      if (creditDate.toDateString() !== filterDate.toDateString()) return false;
+    } else if (dateFilterType === 'range' && (startDate || endDate)) {
       const creditDate = new Date(credit.date);
       if (startDate && new Date(startDate) > creditDate) return false;
       if (endDate && new Date(endDate) < creditDate) return false;
@@ -180,11 +187,12 @@ export function CustomerDetails({
     setAmountValue('');
     setAmountFrom('');
     setAmountTo('');
+    setSingleDate('');
     setStartDate('');
     setEndDate('');
   };
 
-  const hasActiveFilters = statusFilter !== 'all' || amountFilter !== 'none' || startDate || endDate;
+  const hasActiveFilters = statusFilter !== 'all' || amountFilter !== 'none' || singleDate || (dateFilterType === 'range' && (startDate || endDate));
 
   const handleSendReminder = (method: 'telegram' | 'sms') => {
     // Get unpaid credits details (all unpaid credits, not filtered)
@@ -468,7 +476,7 @@ export function CustomerDetails({
             onClick={() => setShowBulkPayment(true)}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >
-            <Wallet className="w-5 h-5" />
+            <Minus className="w-5 h-5" />
             {t('recordPayment')}
           </button>
           <button
@@ -507,13 +515,6 @@ export function CustomerDetails({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-gray-900 dark:text-white">{t('creditHistory')}</h2>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleExportPDF}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                {t('exportAll')}
-              </button>
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -561,10 +562,59 @@ export function CustomerDetails({
 
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('filterByDate')}</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('startDate')}</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /></div>
-                  <div><label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('endDate')}</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /></div>
+                <div className="mb-3">
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setDateFilterType('single')}
+                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'single'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                    >
+                      Single Day
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDateFilterType('range')}
+                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'range'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                    >
+                      Date Range
+                    </button>
+                  </div>
                 </div>
+                {dateFilterType === 'single' ? (
+                  <input
+                    type="date"
+                    value={singleDate}
+                    onChange={(e) => setSingleDate(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  />
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('startDate')}</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('endDate')}</label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {hasActiveFilters && <button onClick={clearFilters} className="inline-flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><X className="w-4 h-4" />{t('clearFilters')}</button>}

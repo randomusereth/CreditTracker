@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { ArrowLeft, User, Phone, Upload, AlertCircle } from 'lucide-react';
+import { ArrowLeft, User, Phone, AlertCircle } from 'lucide-react';
 import { Customer } from '../App';
 import { validateEthiopianPhone } from '../utils/phoneValidation';
-import { ContactPickerModal } from './ContactPickerModal';
 
 type AddCustomerProps = {
   onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt'>) => void;
@@ -13,7 +12,6 @@ export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProp
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [showContactPicker, setShowContactPicker] = useState(false);
 
   const handlePhoneChange = (value: string) => {
     setPhone(value);
@@ -45,16 +43,6 @@ export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProp
     onAddCustomer({ name: name.trim(), phone: phone.trim() });
   };
 
-  const handleImportFromContacts = () => {
-    setShowContactPicker(true);
-  };
-
-  const handleSelectContact = (contactName: string, contactPhone: string) => {
-    setName(contactName);
-    setPhone(contactPhone);
-    setPhoneError(null);
-    setShowContactPicker(false);
-  };
 
   return (
     <div className="space-y-6">
@@ -125,21 +113,6 @@ export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProp
           </div>
         </div>
 
-        {/* Import from Contacts */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <button
-            type="button"
-            onClick={handleImportFromContacts}
-            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            <Upload className="w-5 h-5" />
-            <span>Import from Phone Contacts</span>
-          </button>
-          <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-            Quickly add customers from your phone's contact list
-          </p>
-        </div>
-
         {/* Action Buttons */}
         <div className="flex gap-3">
           <button
@@ -157,13 +130,6 @@ export default function AddCustomer({ onAddCustomer, onCancel }: AddCustomerProp
           </button>
         </div>
       </form>
-
-      {/* Contact Picker Modal */}
-      <ContactPickerModal
-        isOpen={showContactPicker}
-        onClose={() => setShowContactPicker(false)}
-        onSelectContact={handleSelectContact}
-      />
     </div>
   );
 }

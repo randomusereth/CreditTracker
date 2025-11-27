@@ -203,10 +203,10 @@ function PasswordAuth({ onComplete }: { onComplete: () => void }) {
                     setPin(value);
                   }}
                   placeholder={isCreating ? "Enter 4-digit PIN" : "Enter your PIN"}
-                  className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.pin
+                  className={`w-full pl-3 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border ${errors.pin
                     ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
-                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 text-center text-2xl tracking-widest`}
+                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 text-left text-2xl tracking-widest placeholder:text-sm`}
                   disabled={isSubmitting}
                 />
               </div>
@@ -884,7 +884,7 @@ function App() {
         </main>
 
         {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50" style={{ position: 'fixed', bottom: 0, transform: 'translateZ(0)', willChange: 'transform' }}>
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-around items-center h-16">
               <button
