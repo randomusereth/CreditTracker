@@ -1,0 +1,91 @@
+═══════════════════════════════════════════════════════════════
+  🧪 TESTING THE NEW USER FLOW - QUICK INSTRUCTIONS
+═══════════════════════════════════════════════════════════════
+
+PROBLEM: You're seeing dummy data (8 customers, 15 credits)
+CAUSE: Old localStorage data from before authentication system
+SOLUTION: Clear it! Here's how:
+
+═══════════════════════════════════════════════════════════════
+
+METHOD 1: RED DEBUG BUTTON (EASIEST!) ⭐
+─────────────────────────────────────────────────────────────
+
+1. Look at bottom-right corner of your screen
+2. You'll see a RED button: "Clear All Data (Debug)"
+3. Click it
+4. Confirm the popup
+5. ✅ You'll be redirected to onboarding page!
+
+═══════════════════════════════════════════════════════════════
+
+METHOD 2: BROWSER CONSOLE
+─────────────────────────────────────────────────────────────
+
+1. Press F12 (or right-click → Inspect)
+2. Click "Console" tab
+3. Type this EXACTLY:
+
+   localStorage.clear();
+   location.reload();
+
+4. Press Enter
+5. ✅ You'll see the onboarding page!
+
+═══════════════════════════════════════════════════════════════
+
+AFTER CLEARING DATA:
+─────────────────────────────────────────────────────────────
+
+1. You'll see the ONBOARDING PAGE (beautiful blue gradient)
+
+2. Enter test credentials:
+   Phone Number:  +251912345678
+   Telegram ID:   testuser
+
+3. Click "Get Started"
+
+4. You'll see the DASHBOARD with:
+   ✅ Total Credits: 0 ETB
+   ✅ Paid Credits: 0 ETB
+   ✅ Unpaid Credits: 0 ETB
+   ✅ Customers: 0
+   ✅ Big welcome card: "Welcome to Your Credit Tracker!"
+   ✅ Button: "Add Your First Credit"
+   ✅ Tables show: "No data available"
+
+═══════════════════════════════════════════════════════════════
+
+STILL SEEING DUMMY DATA?
+─────────────────────────────────────────────────────────────
+
+Try this in console (F12):
+
+// Remove old data key
+localStorage.removeItem('creditTrackerData');
+localStorage.removeItem('creditTracker_currentUser');
+location.reload();
+
+═══════════════════════════════════════════════════════════════
+
+QUICK VERIFICATION:
+─────────────────────────────────────────────────────────────
+
+After onboarding, check these:
+
+□ All stats show "0" or "0 ETB"
+□ See welcome message
+□ See "Add Your First Credit" button
+□ Tables are empty (show "No data available")
+□ Top right shows your Telegram ID (@testuser)
+□ Can click user menu to see phone number
+
+If all checked ✅ = SUCCESS! You're seeing the new user flow!
+
+═══════════════════════════════════════════════════════════════
+
+NEED MORE HELP?
+
+Read the detailed guide: /HOW_TO_TEST.md
+
+═══════════════════════════════════════════════════════════════
