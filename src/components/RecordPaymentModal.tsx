@@ -54,7 +54,7 @@ export function RecordPaymentModal({
   const totalOutstanding = credit.remainingAmount;
 
   const handleSave = () => {
-    const amount = parseFloat(paymentAmount) || 0;
+    const amount = parseFormattedNumber(paymentAmount);
 
     if (isNaN(amount) || amount <= 0) {
       alert('Please enter a valid payment amount');

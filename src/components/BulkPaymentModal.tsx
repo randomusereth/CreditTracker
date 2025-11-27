@@ -80,7 +80,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const amount = parseFloat(paymentAmount) || 0;
+    const amount = parseFormattedNumber(paymentAmount) || 0;
     
     if (amount < 0) {
       setError(t('enterValidAmount'));
@@ -131,7 +131,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
   }, [paymentAmount, eligibleCredits.length, totalOutstanding]);
 
   const handleApplyPayment = () => {
-    const amount = parseFloat(paymentAmount) || 0;
+    const amount = parseFormattedNumber(paymentAmount) || 0;
     
     if (amount <= 0) {
       setError(t('enterValidAmount'));
@@ -198,12 +198,11 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                   </div>
                 </div>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  onChange={(e) => setPaymentAmount(formatInputNumber(e.target.value))}
                   placeholder="0.00"
-                  step="0.01"
-                  min="0"
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xl"
                   autoFocus
                 />
@@ -216,7 +215,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                 {!error && paymentAmount && parseFormattedNumber(paymentAmount) > 0 && (
                   <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm">
                     <CheckCircle className="w-4 h-4" />
-                    {t('remaining')}: {formatNumber(totalOutstanding - (parseFloat(paymentAmount) || 0))} ETB
+                    {t('remaining')}: {formatNumber(totalOutstanding - (parseFormattedNumber(paymentAmount) || 0))} ETB
                   </div>
                 )}
                 <p className="text-sm text-gray-600 dark:text-gray-400 italic">
@@ -329,7 +328,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
             </button>
             <button
               onClick={handleApplyPayment}
-              disabled={!paymentAmount || (parseFloat(paymentAmount) || 0) <= 0 || !!error}
+              disabled={!paymentAmount || (parseFormattedNumber(paymentAmount) || 0) <= 0 || !!error}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {t('applyPayment')}

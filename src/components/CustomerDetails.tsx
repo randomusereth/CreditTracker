@@ -71,6 +71,9 @@ const translations: Record<string, Record<string, string>> = {
     editCustomerModal: 'Edit Customer',
     customerName: 'Customer Name',
     phoneNumber: 'Phone Number',
+    noOutstanding: 'You have no outstanding credits. Thank you!',
+    totalOutstanding: 'Total Outstanding',
+    etb: 'ETB',
   },
   am: {
     totalCredits: 'ጠቅላላ ብድሮች',
@@ -119,6 +122,9 @@ const translations: Record<string, Record<string, string>> = {
     editCustomerModal: 'ደንበኛ አርትዕ',
     customerName: 'የደንበኛ ስም',
     phoneNumber: 'ስልክ ቁጥር',
+    noOutstanding: 'ያልተከፈለ ብድር የለቦትም እናመሰግናለን',
+    totalOutstanding: 'ያልተከፈል ብር መጠን',
+    etb: 'ብር',
   },
 };
 
@@ -204,16 +210,26 @@ export function CustomerDetails({
     let message = ``;
 
     if (unpaidCount === 0) {
-      message += 'ያልተከፈለ ብድር የለቦትም እናመሰግናለን';
+      message += t('noOutstanding');
     } else {
-      message += `ያልተከፈል ብር መጠን = ${formatNumber(totalUnpaidAmount)} ብር\n`;
-
+      message += `${t('totalOutstanding')}: ${formatNumber(totalUnpaidAmount)} ${t('etb')}\n`;
+      if (unpaidCount <= 3) {
+        unpaidCredits.forEach((credit, index) => {
+          message += `${index + 1}. ${credit.item}: ${formatNumber(credit.remainingAmount)} ${t('etb')}\n`;
+        });
+      }
     }
 
     if (method === 'sms') {
       // Open SMS app with pre-filled message
-      const smsUrl = `sms:${customer.phone}?body=${encodeURIComponent(message)}`;
-      window.location.href = smsUrl;
+      // Remove any spaces or special characters from phone number for SMS URL
+      const cleanPhone = customer.phone.replace(/[\s\-\(\)]/g, '');
+      // Use sms: protocol with body parameter
+      const smsUrl = `sms:${cleanPhone}?body=${encodeURIComponent(message)}`;
+      // Create a temporary anchor element to trigger SMS
+      const link = document.createElement('a');
+      link.href = smsUrl;
+      link.click();
     } else {
       // Telegram integration (for future)
       alert(`Telegram message prepared:\n\n${message}\n\nThis would integrate with Telegram API to send the message.`);
@@ -568,8 +584,8 @@ export function CustomerDetails({
                       type="button"
                       onClick={() => setDateFilterType('single')}
                       className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'single'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                     >
                       Single Day
@@ -578,8 +594,8 @@ export function CustomerDetails({
                       type="button"
                       onClick={() => setDateFilterType('range')}
                       className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'range'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                     >
                       Date Range

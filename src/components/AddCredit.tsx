@@ -31,7 +31,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
       return;
     }
 
-    const total = parseFloat(totalAmount) || 0;
+    const total = parseFormattedNumber(totalAmount);
     if (isNaN(total) || total <= 0) {
       alert('Please enter a valid amount');
       return;
@@ -39,7 +39,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
 
     let paid = 0;
     if (paidAmount) {
-      const value = parseFloat(paidAmount) || 0;
+      const value = parseFormattedNumber(paidAmount);
       if (!isNaN(value) && value >= 0) {
         paid = Math.min(value, total);
       }
@@ -174,13 +174,12 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 id="totalAmount"
                 value={totalAmount}
-                onChange={(e) => setTotalAmount(e.target.value)}
+                onChange={(e) => setTotalAmount(formatInputNumber(e.target.value))}
                 placeholder="0.00"
-                step="0.01"
-                min="0"
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -196,13 +195,12 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600 dark:text-blue-400" />
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 id="paidAmount"
                 value={paidAmount}
-                onChange={(e) => setPaidAmount(e.target.value)}
+                onChange={(e) => setPaidAmount(formatInputNumber(e.target.value))}
                 placeholder="0.00"
-                step="0.01"
-                min="0"
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-blue-300 dark:border-blue-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -236,15 +234,15 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
                 <span className="text-gray-900 dark:text-white">
-                  {formatNumber(parseFloat(totalAmount || '0') || 0)} ETB
+                  {formatNumber(parseFormattedNumber(totalAmount || '0'))} ETB
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Paid Amount:</span>
                 <span className="text-green-600 dark:text-green-400">
                   {(() => {
-                    const total = parseFloat(totalAmount || '0') || 0;
-                    const value = parseFloat(paidAmount || '0') || 0;
+                    const total = parseFormattedNumber(totalAmount || '0');
+                    const value = parseFormattedNumber(paidAmount || '0');
                     const paid = Math.min(value, total);
                     return formatNumber(paid);
                   })()} ETB
@@ -254,8 +252,8 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 <span className="text-gray-700 dark:text-gray-300">Remaining:</span>
                 <span className="text-red-600 dark:text-red-400">
                   {(() => {
-                    const total = parseFloat(totalAmount || '0') || 0;
-                    const value = parseFloat(paidAmount || '0') || 0;
+                    const total = parseFormattedNumber(totalAmount || '0');
+                    const value = parseFormattedNumber(paidAmount || '0');
                     const paid = Math.min(value, total);
                     return formatNumber(total - paid);
                   })()} ETB
