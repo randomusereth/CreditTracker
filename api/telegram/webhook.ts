@@ -255,25 +255,31 @@ async function getUserIdFromTelegramId(telegramId: string): Promise<string | nul
 }
 
 /**
+ * Format number with commas (every 3 digits)
+ */
+function formatNumberWithCommas(num: number): string {
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
  * Format credit info message
  */
 function formatCreditMessage(info: CustomerCreditInfo): string {
   const { customerName, totalCredits, totalPaid, totalOutstanding, unpaidCount, partiallyPaidCount } = info;
 
   let message = `📊 *Credit Information*\n\n`;
-  message += `👤 *ደንበኛደንበኛ:* ${customerName}\n\n`;
-  message += `💰 *ጠቅላላ የብድር መጠንመጠን:* ${totalCredits.toFixed(2)} ETB\n`;
-  message += `✅ *እስካሁን የተከፈለየተከፈለ:* ${totalPaid.toFixed(2)} ETB\n`;
-  message += `⚠️ *ቀሪቀሪ:* ${totalOutstanding.toFixed(2)} ETB\n\n`;
+  message += `👤 *ደንበኛ:* ${customerName}\n\n`;
+  message += `💰 *ጠቅላላ የብድር መጠን:* ${formatNumberWithCommas(totalCredits)} ETB\n`;
+  message += `✅ *እስካሁን የተከፈለ:* ${formatNumberWithCommas(totalPaid)} ETB\n`;
+  message += `⚠️ *ቀሪ:* ${formatNumberWithCommas(totalOutstanding)} ETB\n\n`;
 
   if (unpaidCount > 0 || partiallyPaidCount > 0) {
-    message += `📋 *Summary:*\n`;
     if (unpaidCount > 0) {
-      message += `• ያልተከፈለ የብድር ብዛትብዛት: ${unpaidCount}\n`;
+      message += `📋 *Summary:*\n`;
+      message += `• ያልተከፈለ የብድር ብዛት: ${unpaidCount.toLocaleString('en-US')}\n`;
     }
-    
   } else {
-    message += `✅ ሁሉም እዳዎች ተከፍለዋልተከፍለዋል!`;
+    message += `✅ ሁሉም እዳዎች ተከፍለዋል!`;
   }
 
   return message;
@@ -449,26 +455,11 @@ export default async function handler(req: any, res: any) {
 
     // Format and send response
     const responseMessage = formatCreditMessage(creditInfo);
-    
-    // Create inline button to open mini app
-    // Use URL button that opens the mini app with customerId parameter
-    const miniAppUrl = `${MINI_APP_URL}?customerId=${creditInfo.customerId}`;
-    const inlineKeyboard = [
-      [
-        {
-          text: '📱 View Details in Mini App',
-          url: miniAppUrl,
-        },
-      ],
-    ];
-    
-    console.log('Mini app URL:', miniAppUrl);
 
     await sendTelegramMessage(
       message.chat.id,
       responseMessage,
-      message.message_id,
-      inlineKeyboard
+      message.message_id
     );
 
     return res.status(200).json({ ok: true });
