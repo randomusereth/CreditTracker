@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Customer, Credit, AppSettings, PaymentRecord } from '../App';
-import { ArrowLeft, Phone, MessageSquare, Send, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet, Minus } from 'lucide-react';
+import { ArrowLeft, Phone, MessageSquare, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet, Minus } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { CreditDetailsModal } from './CreditDetailsModal';
@@ -31,7 +31,6 @@ const translations: Record<string, Record<string, string>> = {
     quickActions: 'Quick Actions',
     phoneCall: 'Phone Call',
     sms: 'SMS',
-    sendReminder: 'Send Reminder',
     exportAll: 'Export All',
     addCredit: 'Add Credit',
     recordPayment: 'Record Payment',
@@ -82,7 +81,6 @@ const translations: Record<string, Record<string, string>> = {
     quickActions: 'ፈጣን እርምጃዎች',
     phoneCall: 'ስልክ ደውል',
     sms: 'ኤስ ኤም ኤስ',
-    sendReminder: 'ማስታወሻሻ ላክ',
     exportAll: 'ሁሉንም ላክ',
     addCredit: 'ብድር ጨምር',
     recordPayment: 'ብድር ቀንስ',
@@ -200,122 +198,6 @@ export function CustomerDetails({
 
   const hasActiveFilters = statusFilter !== 'all' || amountFilter !== 'none' || singleDate || (dateFilterType === 'range' && (startDate || endDate));
 
-  const handleSendReminder = (method: 'telegram' | 'sms') => {
-    // Get unpaid credits details (all unpaid credits, not filtered)
-    const unpaidCredits = credits.filter(c => c.status !== 'paid');
-    const unpaidCount = unpaidCredits.length;
-    const totalUnpaidAmount = unpaidCredits.reduce((sum, c) => sum + c.remainingAmount, 0);
-
-    // Build detailed message
-    let message = ``;
-
-    if (unpaidCount === 0) {
-      message += t('noOutstanding');
-    } else {
-      message += `${t('totalOutstanding')}: ${formatNumber(totalUnpaidAmount)} ${t('etb')}\n`;
-      if (unpaidCount <= 3) {
-        unpaidCredits.forEach((credit, index) => {
-          message += `${index + 1}. ${credit.item}: ${formatNumber(credit.remainingAmount)} ${t('etb')}\n`;
-        });
-      }
-    }
-
-    if (method === 'sms') {
-      // Remove any spaces or special characters from phone number for SMS URL
-      const cleanPhone = customer.phone.replace(/[\s\-\(\)]/g, '');
-      
-      // Check if we're in a webview (Telegram Mini App, etc.) where sms: might not work
-      const isWebView = (window.navigator as any).standalone || 
-                       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-                       ((window as any).Telegram && (window as any).Telegram.WebApp);
-      
-      // Build SMS URL
-      const smsUrl = `sms:${cleanPhone}?body=${encodeURIComponent(message)}`;
-      
-      if (isWebView) {
-        // In webview, sms: protocol often doesn't work, so show copyable message
-        handleSMSFallback(customer.phone, message);
-      } else {
-        // Try to open SMS app using a hidden iframe (more reliable than window.location)
-        try {
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = smsUrl;
-          document.body.appendChild(iframe);
-          
-          // Remove iframe after a short delay
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            // If we're still here, the SMS app didn't open, show fallback
-            handleSMSFallback(customer.phone, message);
-          }, 500);
-        } catch (error) {
-          // If iframe method fails, try direct navigation
-          try {
-            window.location.href = smsUrl;
-            // If navigation doesn't happen, show fallback after delay
-            setTimeout(() => {
-              handleSMSFallback(customer.phone, message);
-            }, 1000);
-          } catch (navError) {
-            handleSMSFallback(customer.phone, message);
-          }
-        }
-      }
-    } else {
-      // Telegram integration (for future)
-      alert(`Telegram message prepared:\n\n${message}\n\nThis would integrate with Telegram API to send the message.`);
-    }
-  };
-
-  const handleSMSFallback = (phone: string, message: string) => {
-    const fullMessage = `Phone: ${phone}\n\nMessage:\n${message}`;
-    const userConfirmed = confirm(
-      `SMS app could not be opened automatically.\n\n` +
-      `${fullMessage}\n\n` +
-      `Click OK to copy the message to clipboard.`
-    );
-    
-    if (userConfirmed) {
-      copyToClipboard(message);
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    // Try modern clipboard API first
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Message copied to clipboard! You can now paste it in your SMS app.');
-      }).catch(() => {
-        copyToClipboardFallback(text);
-      });
-    } else {
-      copyToClipboardFallback(text);
-    }
-  };
-
-  const copyToClipboardFallback = (text: string) => {
-    // Fallback method for copying to clipboard
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        alert('Message copied to clipboard! You can now paste it in your SMS app.');
-      } else {
-        alert(`Please copy this message manually:\n\n${text}`);
-      }
-    } catch (err) {
-      alert(`Please copy this message manually:\n\n${text}`);
-    }
-    document.body.removeChild(textArea);
-  };
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -582,13 +464,6 @@ export function CustomerDetails({
           >
             <Phone className="w-5 h-5" />
             {t('phoneCall')}
-          </button>
-          <button
-            onClick={() => handleSendReminder('sms')}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Send className="w-5 h-5" />
-            {t('sendReminder')}
           </button>
         </div>
       </div>
