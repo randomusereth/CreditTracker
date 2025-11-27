@@ -124,6 +124,11 @@ async function getCustomerCreditInfo(
       return null;
     }
 
+    // Handle case where credits is null or undefined
+    if (!credits) {
+      credits = [];
+    }
+
     // Calculate totals
     const totalCredits = credits.reduce((sum, c) => sum + parseFloat(c.total_amount.toString()), 0);
     const totalPaid = credits.reduce((sum, c) => sum + parseFloat(c.paid_amount.toString()), 0);
@@ -152,6 +157,7 @@ async function getCustomerCreditInfo(
  */
 async function getUserIdFromTelegramId(telegramId: string): Promise<string | null> {
   if (!supabase) {
+    console.error('Supabase client not initialized');
     return null;
   }
 
@@ -162,7 +168,13 @@ async function getUserIdFromTelegramId(telegramId: string): Promise<string | nul
       .eq('telegram_id', telegramId)
       .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      console.error('Error fetching user by telegram ID:', error);
+      return null;
+    }
+
+    if (!data) {
+      console.log(`No user found with telegram_id: ${telegramId}`);
       return null;
     }
 
@@ -277,10 +289,27 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const update: TelegramUpdate = req.body;
+    // Parse request body - Vercel serverless functions may send body as string
+    let update: TelegramUpdate;
+    
+    if (typeof req.body === 'string') {
+      try {
+        update = JSON.parse(req.body);
+      } catch (parseError) {
+        console.error('Failed to parse request body:', parseError);
+        console.error('Request body:', req.body);
+        return res.status(400).json({ error: 'Invalid JSON in request body' });
+      }
+    } else if (req.body && typeof req.body === 'object') {
+      update = req.body;
+    } else {
+      console.error('Unexpected request body type:', typeof req.body);
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
 
     // Check if this is a message update
-    if (!update.message || !update.message.text) {
+    if (!update || !update.message || !update.message.text) {
+      // Not a text message, return success (could be other update types)
       return res.status(200).json({ ok: true });
     }
 
@@ -347,9 +376,28 @@ export default async function handler(req: any, res: any) {
     );
 
     return res.status(200).json({ ok: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Webhook error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Error stack:', error?.stack);
+    console.error('Error message:', error?.message);
+    
+    // Try to send error message to user if we have chat info
+    try {
+      if (req.body?.message?.chat?.id) {
+        await sendTelegramMessage(
+          req.body.message.chat.id,
+          '❌ An error occurred while processing your request. Please try again later.',
+          req.body.message.message_id
+        );
+      }
+    } catch (sendError) {
+      console.error('Failed to send error message to user:', sendError);
+    }
+    
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error?.message || 'Unknown error'
+    });
   }
 }
 
