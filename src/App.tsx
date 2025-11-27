@@ -500,6 +500,25 @@ function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'add-customer' | 'customer-details' | 'add-credit' | 'all-credits' | 'reports' | 'settings' | 'shop-profile' | 'staff'>('dashboard');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
+  // Handle deep links from Telegram bot
+  useEffect(() => {
+    // Check for customerId in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerId = urlParams.get('customerId');
+    
+    if (customerId && user && !isLoading && appState.customers.length > 0) {
+      // Verify customer exists
+      const customer = appState.customers.find(c => c.id === customerId);
+      if (customer) {
+        // Navigate to customer details
+        setSelectedCustomerId(customerId);
+        setCurrentView('customer-details');
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [user, isLoading, appState.customers]);
+
   // Check authentication on mount
   useEffect(() => {
     const loadUserData = async () => {
