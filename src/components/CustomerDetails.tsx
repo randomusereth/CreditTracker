@@ -221,19 +221,100 @@ export function CustomerDetails({
     }
 
     if (method === 'sms') {
-      // Open SMS app with pre-filled message
       // Remove any spaces or special characters from phone number for SMS URL
       const cleanPhone = customer.phone.replace(/[\s\-\(\)]/g, '');
-      // Use sms: protocol with body parameter
+      
+      // Check if we're in a webview (Telegram Mini App, etc.) where sms: might not work
+      const isWebView = window.navigator.standalone || 
+                       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+                       (window.Telegram && window.Telegram.WebApp);
+      
+      // Build SMS URL
       const smsUrl = `sms:${cleanPhone}?body=${encodeURIComponent(message)}`;
-      // Create a temporary anchor element to trigger SMS
-      const link = document.createElement('a');
-      link.href = smsUrl;
-      link.click();
+      
+      if (isWebView) {
+        // In webview, sms: protocol often doesn't work, so show copyable message
+        handleSMSFallback(customer.phone, message);
+      } else {
+        // Try to open SMS app using a hidden iframe (more reliable than window.location)
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = smsUrl;
+          document.body.appendChild(iframe);
+          
+          // Remove iframe after a short delay
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            // If we're still here, the SMS app didn't open, show fallback
+            handleSMSFallback(customer.phone, message);
+          }, 500);
+        } catch (error) {
+          // If iframe method fails, try direct navigation
+          try {
+            window.location.href = smsUrl;
+            // If navigation doesn't happen, show fallback after delay
+            setTimeout(() => {
+              handleSMSFallback(customer.phone, message);
+            }, 1000);
+          } catch (navError) {
+            handleSMSFallback(customer.phone, message);
+          }
+        }
+      }
     } else {
       // Telegram integration (for future)
       alert(`Telegram message prepared:\n\n${message}\n\nThis would integrate with Telegram API to send the message.`);
     }
+  };
+
+  const handleSMSFallback = (phone: string, message: string) => {
+    const fullMessage = `Phone: ${phone}\n\nMessage:\n${message}`;
+    const userConfirmed = confirm(
+      `SMS app could not be opened automatically.\n\n` +
+      `${fullMessage}\n\n` +
+      `Click OK to copy the message to clipboard.`
+    );
+    
+    if (userConfirmed) {
+      copyToClipboard(message);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Message copied to clipboard! You can now paste it in your SMS app.');
+      }).catch(() => {
+        copyToClipboardFallback(text);
+      });
+    } else {
+      copyToClipboardFallback(text);
+    }
+  };
+
+  const copyToClipboardFallback = (text: string) => {
+    // Fallback method for copying to clipboard
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        alert('Message copied to clipboard! You can now paste it in your SMS app.');
+      } else {
+        alert(`Please copy this message manually:\n\n${text}`);
+      }
+    } catch (err) {
+      alert(`Please copy this message manually:\n\n${text}`);
+    }
+    document.body.removeChild(textArea);
   };
 
   const handleExportPDF = () => {
