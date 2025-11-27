@@ -88,6 +88,41 @@ function extractPhoneNumber(text: string): string | null {
 }
 
 /**
+ * Normalize phone number to multiple formats for searching
+ */
+function getPhoneNumberVariants(phone: string): string[] {
+  const variants: string[] = [];
+  
+  // Add the original format
+  variants.push(phone);
+  
+  // If it's in +251 format, also try 0 format
+  if (phone.startsWith('+251')) {
+    const localFormat = '0' + phone.substring(4);
+    variants.push(localFormat);
+    // Also try without leading 0
+    variants.push(phone.substring(4));
+  }
+  
+  // If it's in 0 format, also try +251 format
+  if (phone.startsWith('0')) {
+    const intlFormat = '+251' + phone.substring(1);
+    variants.push(intlFormat);
+    // Also try without leading 0
+    variants.push(phone.substring(1));
+  }
+  
+  // If it's just digits (9 digits), try both formats
+  if (/^\d{9}$/.test(phone)) {
+    variants.push('+251' + phone);
+    variants.push('0' + phone);
+  }
+  
+  // Remove duplicates
+  return [...new Set(variants)];
+}
+
+/**
  * Get customer credit information from Supabase
  */
 async function getCustomerCreditInfo(
@@ -100,17 +135,40 @@ async function getCustomerCreditInfo(
   }
 
   try {
-    // Find customer by phone number for this user
-    const { data: customer, error: customerError } = await supabase
+    // Get all phone number variants to search
+    const phoneVariants = getPhoneNumberVariants(phoneNumber);
+    console.log('Searching for phone number variants:', phoneVariants);
+    console.log('Original phone number:', phoneNumber);
+    
+    // Try to find customer by phone number (try all variants)
+    // Use .in() to search for any of the variants
+    const { data: customers, error: customerError } = await supabase
       .from('customers')
       .select('id, name, phone')
       .eq('user_id', userId)
-      .eq('phone', phoneNumber)
-      .maybeSingle();
+      .in('phone', phoneVariants);
 
-    if (customerError || !customer) {
+    if (customerError) {
+      console.error('Error fetching customer:', customerError);
       return null;
     }
+
+    // If no customer found, log for debugging
+    if (!customers || customers.length === 0) {
+      console.log('No customer found with any of these phone variants:', phoneVariants);
+      // Let's also check what phone numbers exist for this user
+      const { data: allCustomers } = await supabase
+        .from('customers')
+        .select('phone')
+        .eq('user_id', userId)
+        .limit(10);
+      console.log('Sample phone numbers in database for this user:', allCustomers?.map(c => c.phone));
+      return null;
+    }
+
+    // Use the first matching customer
+    const customer = customers[0];
+    console.log('Found customer:', customer.name, 'with phone:', customer.phone);
 
     // Get all credits for this customer
     const { data: credits, error: creditsError } = await supabase
@@ -364,6 +422,9 @@ export default async function handler(req: any, res: any) {
       );
       return res.status(200).json({ ok: true });
     }
+
+    console.log('Extracted phone number:', phoneNumber);
+    console.log('User ID:', userId);
 
     // Get customer credit information
     const creditInfo = await getCustomerCreditInfo(userId, phoneNumber);
