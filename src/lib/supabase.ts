@@ -40,7 +40,7 @@ export const TABLES = {
  */
 
 // Ensure user exists in database
-export async function ensureUserExists(userId: string, telegramId?: string, phoneNumber?: string): Promise<void> {
+export async function ensureUserExists(userId: string, telegramId?: string, passwordHash?: string): Promise<void> {
   if (!supabaseUrl || !supabaseAnonKey) return;
 
   try {
@@ -49,7 +49,7 @@ export async function ensureUserExists(userId: string, telegramId?: string, phon
       .upsert({
         id: userId,
         telegram_id: telegramId || null,
-        phone_number: phoneNumber || null,
+        password_hash: passwordHash || null,
       }, {
         onConflict: 'id',
       });
@@ -59,6 +59,50 @@ export async function ensureUserExists(userId: string, telegramId?: string, phon
     }
   } catch (error) {
     console.warn('Error ensuring user exists:', error);
+  }
+}
+
+export async function getUserByTelegramId(telegramId: string): Promise<{ id: string; password_hash: string } | null> {
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.USERS)
+      .select('id, password_hash')
+      .eq('telegram_id', telegramId)
+      .maybeSingle();
+    
+    // maybeSingle returns null if no row found, which is fine
+    if (error) {
+      // Only log if it's not a "not found" error
+      if (error.code !== 'PGRST116') {
+        console.warn('Error getting user by telegram ID:', error);
+      }
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.warn('Error getting user by telegram ID:', error);
+    return null;
+  }
+}
+
+export async function updateUserPassword(userId: string, passwordHash: string): Promise<void> {
+  if (!supabaseUrl || !supabaseAnonKey) return;
+
+  try {
+    const { error } = await supabase
+      .from(TABLES.USERS)
+      .update({ password_hash: passwordHash })
+      .eq('id', userId);
+    
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.warn('Error updating user password:', error);
+    throw error;
   }
 }
 

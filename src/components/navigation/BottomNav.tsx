@@ -67,7 +67,8 @@ export function BottomNav() {
             <FileText className="w-5 h-5" />
             <span className="text-xs">Reports</span>
           </Link>
-          <Link
+          {/* Staff link - hidden for now, uncomment to show */}
+          {/* <Link
             href="/staff"
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
               isActive('/staff')
@@ -77,7 +78,7 @@ export function BottomNav() {
           >
             <UserCog className="w-5 h-5" />
             <span className="text-xs">Staff</span>
-          </Link>
+          </Link> */}
         </div>
       </div>
     </nav>

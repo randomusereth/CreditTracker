@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Customer, Credit, AppSettings } from '../App';
-import { Search, Filter, X, CreditCard as CreditCardIcon } from 'lucide-react';
+import { Search, Filter, X, CreditCard as CreditCardIcon, Download } from 'lucide-react';
 import { CreditDetailsModal } from './CreditDetailsModal';
 import { formatNumber } from '../utils/formatNumber';
+import jsPDF from 'jspdf';
 
 interface AllCreditsProps {
   credits: Credit[];
@@ -41,6 +42,7 @@ const translations: Record<string, Record<string, string>> = {
     paid: 'Paid',
     partiallyPaid: 'Partially Paid',
     unpaid: 'Unpaid',
+    exportPDF: 'Export PDF',
   },
   am: {
     allCredits: 'ሁሉም ብድሮች',
@@ -69,6 +71,7 @@ const translations: Record<string, Record<string, string>> = {
     paid: 'ተከፍሏል',
     partiallyPaid: 'በከፊል የተከፈለ',
     unpaid: 'ያልተከፈለ',
+    exportPDF: 'PDF ላይ ላክ',
   },
 };
 
@@ -91,14 +94,14 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
 
   const filteredCredits = credits.filter((credit) => {
     const customer = getCustomerInfo(credit.customerId);
-    
+
     // Search filter
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       const matchesName = customer?.name.toLowerCase().includes(search);
       const matchesPhone = customer?.phone.toLowerCase().includes(search);
       const matchesItem = credit.item.toLowerCase().includes(search);
-      
+
       if (!matchesName && !matchesPhone && !matchesItem) {
         return false;
       }
@@ -140,6 +143,141 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
 
   const hasActiveFilters = amountFilter !== 'none' || startDate || endDate || searchTerm;
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    let yPosition = margin;
+    const lineHeight = 7;
+    const maxY = pageHeight - margin;
+
+    // Helper function to add a new page if needed
+    const checkNewPage = (requiredSpace: number) => {
+      if (yPosition + requiredSpace > maxY) {
+        doc.addPage();
+        yPosition = margin;
+        return true;
+      }
+      return false;
+    };
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('All Credits Report', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += lineHeight * 2;
+
+    // Export date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Exported on: ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += lineHeight * 2;
+
+    // Summary
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', margin, yPosition);
+    yPosition += lineHeight;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const totalCreditsAmount = filteredCredits.reduce((sum, c) => sum + c.totalAmount, 0);
+    const totalPaidAmount = filteredCredits.reduce((sum, c) => sum + c.paidAmount, 0);
+    const totalRemainingAmount = filteredCredits.reduce((sum, c) => sum + c.remainingAmount, 0);
+
+    doc.text(`Total Credits: ${filteredCredits.length}`, margin, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Total Amount: ${formatNumber(totalCreditsAmount)} ETB`, margin, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Total Paid: ${formatNumber(totalPaidAmount)} ETB`, margin, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Total Remaining: ${formatNumber(totalRemainingAmount)} ETB`, margin, yPosition);
+    yPosition += lineHeight * 2;
+
+    // Table header
+    checkNewPage(lineHeight * 2);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Credits Details', margin, yPosition);
+    yPosition += lineHeight * 1.5;
+
+    // Table columns
+    const colWidths = [35, 30, 35, 25, 25, 25, 20];
+    const headers = ['Customer', 'Phone', 'Item', 'Total', 'Paid', 'Remaining', 'Status'];
+    let xPosition = margin;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    headers.forEach((header, index) => {
+      doc.text(header, xPosition, yPosition);
+      xPosition += colWidths[index];
+    });
+    yPosition += lineHeight;
+
+    // Draw line under header
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += lineHeight * 0.5;
+
+    // Table rows
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+
+    filteredCredits.forEach((credit, index) => {
+      checkNewPage(lineHeight * 2);
+
+      const customer = getCustomerInfo(credit.customerId);
+      const customerName = customer?.name || 'Unknown';
+      const phone = customer?.phone || '-';
+      const item = credit.item.length > 20 ? credit.item.substring(0, 20) + '...' : credit.item;
+      const total = formatNumber(credit.totalAmount);
+      const paid = formatNumber(credit.paidAmount);
+      const remaining = formatNumber(credit.remainingAmount);
+      const status = credit.status === 'paid' ? 'Paid' : credit.status === 'partially-paid' ? 'Partial' : 'Unpaid';
+
+      xPosition = margin;
+      const rowData = [customerName, phone, item, total, paid, remaining, status];
+
+      rowData.forEach((data, colIndex) => {
+        // Truncate text if too long
+        let text = String(data);
+        if (colIndex === 0 && text.length > 15) text = text.substring(0, 15) + '...';
+        if (colIndex === 2 && text.length > 20) text = text.substring(0, 20) + '...';
+
+        doc.text(text, xPosition, yPosition);
+        xPosition += colWidths[colIndex];
+      });
+
+      yPosition += lineHeight;
+
+      // Add separator line every 5 rows
+      if ((index + 1) % 5 === 0 && index < filteredCredits.length - 1) {
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += lineHeight * 0.5;
+      }
+    });
+
+    // Footer
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: 'center' }
+      );
+    }
+
+    // Save the PDF
+    doc.save(`all_credits_backup_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Credit Details Modal */}
@@ -158,16 +296,26 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <CreditCardIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <CreditCardIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h1 className="text-gray-900 dark:text-white">{t('allCredits')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {filteredCredits.length} of {credits.length} credits
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-gray-900 dark:text-white">{t('allCredits')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {filteredCredits.length} of {credits.length} credits
-          </p>
-        </div>
+        <button
+          onClick={handleExportPDF}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          title="Export all credits to PDF for backup"
+        >
+          <Download className="w-5 h-5" />
+          <span>{t('exportPDF')}</span>
+        </button>
       </div>
 
       {/* Search and Filter Bar */}
@@ -214,41 +362,37 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                 <div className="flex gap-2">
                   <button
                     onClick={() => setAmountFilter('none')}
-                    className={`px-3 py-1 rounded-lg text-sm ${
-                      amountFilter === 'none'
+                    className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'none'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    }`}
+                      }`}
                   >
                     All
                   </button>
                   <button
                     onClick={() => setAmountFilter('gt')}
-                    className={`px-3 py-1 rounded-lg text-sm ${
-                      amountFilter === 'gt'
+                    className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'gt'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    }`}
+                      }`}
                   >
                     {t('greaterThan')}
                   </button>
                   <button
                     onClick={() => setAmountFilter('lt')}
-                    className={`px-3 py-1 rounded-lg text-sm ${
-                      amountFilter === 'lt'
+                    className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'lt'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    }`}
+                      }`}
                   >
                     {t('lessThan')}
                   </button>
                   <button
                     onClick={() => setAmountFilter('range')}
-                    className={`px-3 py-1 rounded-lg text-sm ${
-                      amountFilter === 'range'
+                    className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'range'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    }`}
+                      }`}
                   >
                     {t('range')}
                   </button>
@@ -340,12 +484,12 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                 filteredCredits.map((credit) => {
                   const customer = getCustomerInfo(credit.customerId);
                   return (
-                    <tr 
-                      key={credit.id} 
+                    <tr
+                      key={credit.id}
                       onClick={() => setSelectedCredit(credit)}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     >
-                      <td 
+                      <td
                         className="px-6 py-4 text-gray-900 dark:text-white"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -374,11 +518,11 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                       <td className="px-6 py-4">
                         <span className={`
                           inline-flex px-2 py-1 rounded-full text-xs
-                          ${credit.status === 'paid' 
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                          ${credit.status === 'paid'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                             : credit.status === 'partially-paid'
-                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                           }
                         `}>
                           {credit.status === 'paid' ? t('paid') : credit.status === 'partially-paid' ? t('partiallyPaid') : t('unpaid')}

@@ -4,7 +4,8 @@
  */
 
 import { User } from '@/types/auth';
-import { ensureUserExists } from './supabase';
+import { ensureUserExists, getUserByTelegramId, updateUserPassword } from './supabase';
+import { getTelegramUser } from './telegram-debug';
 
 const AUTH_STORAGE_KEY = 'creditTracker_currentUser';
 
@@ -41,37 +42,123 @@ export function clearCurrentUser(): void {
 }
 
 /**
- * Create new user account
+ * Get Telegram user ID from initData
  */
-export async function createUser(phoneNumber: string, telegramId: string): Promise<User> {
+export function getTelegramUserId(): string | null {
+  const tgUser = getTelegramUser();
+  if (!tgUser || !tgUser.id) return null;
+  return tgUser.id.toString();
+}
+
+/**
+ * Hash password (simple hash for now - in production, use bcrypt or similar)
+ */
+export async function hashPassword(password: string): Promise<string> {
+  // Simple hash using Web Crypto API
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Verify password
+ */
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const passwordHash = await hashPassword(password);
+  return passwordHash === hash;
+}
+
+/**
+ * Create new user account with password
+ */
+export async function createUserWithPassword(telegramId: string, password: string): Promise<User> {
+  const userId = telegramId; // Use Telegram ID as user ID
+  const passwordHash = await hashPassword(password);
+  
   const user: User = {
-    id: Date.now().toString(),
-    phoneNumber,
+    id: userId,
     telegramId,
     createdAt: new Date().toISOString(),
   };
   
-  // Ensure user exists in Supabase
-  await ensureUserExists(user.id, user.telegramId, user.phoneNumber);
+  // Create user in Supabase with password
+  await ensureUserExists(user.id, user.telegramId, passwordHash);
   
   return user;
 }
 
 /**
- * Validate phone number format
+ * Authenticate user with password
  */
-export function validatePhoneNumber(phone: string): boolean {
-  // Basic validation: should contain only digits, +, -, (), and spaces
-  const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-  const cleanedPhone = phone.trim();
-  return cleanedPhone.length >= 10 && phoneRegex.test(cleanedPhone);
+export async function authenticateUser(telegramId: string, password: string): Promise<User | null> {
+  const userData = await getUserByTelegramId(telegramId);
+  if (!userData) return null;
+  
+  const isValid = await verifyPassword(password, userData.password_hash);
+  if (!isValid) return null;
+  
+  const user: User = {
+    id: userData.id,
+    telegramId,
+    createdAt: new Date().toISOString(),
+  };
+  
+  return user;
 }
 
 /**
- * Validate Telegram ID format
+ * Check if user exists (has password set)
  */
-export function validateTelegramId(id: string): boolean {
-  // Telegram ID should be alphanumeric and 5-32 characters
-  const idRegex = /^[a-zA-Z0-9_]{5,32}$/;
-  return idRegex.test(id.trim());
+export async function userExists(telegramId: string): Promise<boolean> {
+  const userData = await getUserByTelegramId(telegramId);
+  return userData !== null && userData.password_hash !== null;
+}
+
+/**
+ * Validate password strength
+ */
+export function validatePassword(password: string): { valid: boolean; error?: string } {
+  if (password.length < 6) {
+    return { valid: false, error: 'Password must be at least 6 characters' };
+  }
+  if (password.length > 100) {
+    return { valid: false, error: 'Password must be less than 100 characters' };
+  }
+  return { valid: true };
+}
+
+/**
+ * Change user password
+ */
+export async function changePassword(telegramId: string, currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  // Validate new password
+  const validation = validatePassword(newPassword);
+  if (!validation.valid) {
+    return { success: false, error: validation.error };
+  }
+
+  // Verify current password
+  const userData = await getUserByTelegramId(telegramId);
+  if (!userData || !userData.password_hash) {
+    return { success: false, error: 'User not found' };
+  }
+
+  const isValid = await verifyPassword(currentPassword, userData.password_hash);
+  if (!isValid) {
+    return { success: false, error: 'Current password is incorrect' };
+  }
+
+  // Hash new password
+  const newPasswordHash = await hashPassword(newPassword);
+
+  // Update password
+  try {
+    await updateUserPassword(userData.id, newPasswordHash);
+    return { success: true };
+  } catch (error) {
+    console.error('Error changing password:', error);
+    return { success: false, error: 'Failed to update password. Please try again.' };
+  }
 }

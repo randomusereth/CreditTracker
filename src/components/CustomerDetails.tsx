@@ -312,33 +312,36 @@ export function CustomerDetails({
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-gray-900 dark:text-white">{customer.name}</h1>
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-              <Phone className="w-4 h-4" />
-              <span>{customer.phone}</span>
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-gray-900 dark:text-white">{customer.name}</h1>
+            <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                <Phone className="w-4 h-4" />
+                <span>{customer.phone}</span>
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        {/* Edit and Delete buttons below name and phone */}
+        <div className="flex gap-2 pl-12">
           <button
             onClick={() => setEditingCustomer(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Edit2 className="w-4 h-4" />
             {t('editCustomer')}
           </button>
           <button
             onClick={() => setDeleteModal({isOpen: true, type: 'customer', id: customer.id, name: customer.name})}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
             {t('deleteCustomer')}
@@ -414,34 +417,34 @@ export function CustomerDetails({
       {/* Actions */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
         <h2 className="text-gray-900 dark:text-white mb-4">{t('quickActions')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="space-y-3">
           <button
             onClick={onAddCredit}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >
             <Plus className="w-5 h-5" />
             {t('addCredit')}
           </button>
           <button
+            onClick={() => setShowBulkPayment(true)}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+          >
+            <Wallet className="w-5 h-5" />
+            {t('recordPayment')}
+          </button>
+          <button
             onClick={() => window.location.href = `tel:${customer.phone}`}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Phone className="w-5 h-5" />
             {t('phoneCall')}
           </button>
           <button
             onClick={() => handleSendReminder('sms')}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Send className="w-5 h-5" />
             {t('sms')}
-          </button>
-          <button
-            onClick={() => setShowBulkPayment(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Wallet className="w-5 h-5" />
-            {t('recordPayment')}
           </button>
         </div>
       </div>

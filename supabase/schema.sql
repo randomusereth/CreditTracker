@@ -9,18 +9,18 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- For now, we'll create a simple table that accepts any user_id
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
-  telegram_id TEXT,
-  phone_number TEXT,
+  telegram_id TEXT UNIQUE,
+  password_hash TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create a function to automatically create user record if it doesn't exist
-CREATE OR REPLACE FUNCTION ensure_user_exists(user_id TEXT, telegram_id TEXT DEFAULT NULL, phone_number TEXT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION ensure_user_exists(user_id TEXT, telegram_id TEXT DEFAULT NULL, password_hash TEXT DEFAULT NULL)
 RETURNS VOID AS $$
 BEGIN
-  INSERT INTO users (id, telegram_id, phone_number)
-  VALUES (user_id, telegram_id, phone_number)
-  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO users (id, telegram_id, password_hash)
+  VALUES (user_id, telegram_id, password_hash)
+  ON CONFLICT (id) DO UPDATE SET telegram_id = EXCLUDED.telegram_id;
 END;
 $$ LANGUAGE plpgsql;
 

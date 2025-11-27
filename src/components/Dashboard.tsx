@@ -119,33 +119,32 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 10);
 
-  const stats = [
-    {
-      label: t('totalCredits'),
-      value: `${formatNumber(totalCredits)} ETB`,
-      icon: DollarSign,
-      color: 'blue',
-      trend: 'up',
-    },
-    {
-      label: t('paidCredits'),
-      value: `${formatNumber(totalPaid)} ETB`,
-      icon: TrendingUp,
-      color: 'green',
-    },
-    {
-      label: t('unpaidCredits'),
-      value: `${formatNumber(totalUnpaid)} ETB`,
-      icon: TrendingDown,
-      color: 'red',
-    },
-    {
-      label: t('customers'),
-      value: customers.length.toString(),
-      icon: Users,
-      color: 'purple',
-    },
-  ];
+  const renderStatCard = (label: string, value: string, icon: any, color: 'blue' | 'green' | 'red' | 'purple', trend?: 'up') => {
+    const Icon = icon;
+    const colorClasses = {
+      blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
+      green: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
+      red: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400',
+      purple: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+    }[color];
+
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className={`p-3 rounded-lg ${colorClasses}`}>
+            <Icon className="w-6 h-6" />
+          </div>
+          {trend && (
+            <TrendingUp className="w-4 h-4 text-green-500" />
+          )}
+        </div>
+        <div className="mt-4">
+          <p className="text-gray-600 dark:text-gray-400">{label}</p>
+          <p className="text-gray-900 dark:text-white mt-1">{value}</p>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -181,37 +180,39 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
         </button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          const colorClasses = {
-            blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-            green: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
-            red: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400',
-            purple: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-          }[stat.color];
-
-          return (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
-            >
-              <div className="flex items-center justify-between">
-                <div className={`p-3 rounded-lg ${colorClasses}`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                {stat.trend && (
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                )}
-              </div>
-              <div className="mt-4">
-                <p className="text-gray-600 dark:text-gray-400">{stat.label}</p>
-                <p className="text-gray-900 dark:text-white mt-1">{stat.value}</p>
-              </div>
-            </div>
-          );
-        })}
+      {/* Stats Grid - 2 rows, 2 columns */}
+      <div className="space-y-4">
+        {/* Row 1: Total Credits and Customers */}
+        <div className="grid grid-cols-2 gap-4">
+          {renderStatCard(
+            t('totalCredits'),
+            `${formatNumber(totalCredits)} ETB`,
+            DollarSign,
+            'blue',
+            'up'
+          )}
+          {renderStatCard(
+            t('customers'),
+            customers.length.toString(),
+            Users,
+            'purple'
+          )}
+        </div>
+        {/* Row 2: Paid Credits and Unpaid Credits */}
+        <div className="grid grid-cols-2 gap-4">
+          {renderStatCard(
+            t('paidCredits'),
+            `${formatNumber(totalPaid)} ETB`,
+            TrendingUp,
+            'green'
+          )}
+          {renderStatCard(
+            t('unpaidCredits'),
+            `${formatNumber(totalUnpaid)} ETB`,
+            TrendingDown,
+            'red'
+          )}
+        </div>
       </div>
 
       {/* Unpaid Credits Alert */}
@@ -284,12 +285,12 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                 </tr>
               ) : (
                 recentCredits.map((credit) => (
-                  <tr 
-                    key={credit.id} 
+                  <tr
+                    key={credit.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     onClick={() => setSelectedCredit(credit)}
                   >
-                    <td 
+                    <td
                       className="px-6 py-4 text-gray-900 dark:text-white"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -309,11 +310,11 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                     <td className="px-6 py-4">
                       <span className={`
                         inline-flex px-2 py-1 rounded-full text-xs
-                        ${credit.status === 'paid' 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                        ${credit.status === 'paid'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                           : credit.status === 'partially-paid'
-                          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                         }
                       `}>
                         {credit.status === 'paid' ? t('paid') : credit.status === 'partially-paid' ? t('partiallyPaid') : t('unpaidCredits')}
@@ -360,12 +361,12 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                 </tr>
               ) : (
                 recentPayments.map((payment) => (
-                  <tr 
-                    key={payment.id} 
+                  <tr
+                    key={payment.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     onClick={() => setSelectedCredit(payment.credit)}
                   >
-                    <td 
+                    <td
                       className="px-6 py-4 text-gray-900 dark:text-white"
                       onClick={(e) => {
                         e.stopPropagation();

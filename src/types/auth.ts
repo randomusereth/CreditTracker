@@ -4,7 +4,6 @@
 
 export type User = {
   id: string;
-  phoneNumber: string;
   telegramId: string;
   createdAt: string;
 };

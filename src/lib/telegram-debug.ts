@@ -71,10 +71,114 @@ export function getTelegramUser(): any {
   const tg = getTelegramWebApp();
   if (!tg) return null;
   
-  // Try different ways to get user data
-  return (tg as any).initDataUnsafe?.user 
-    || (tg as any).initData?.user 
-    || null;
+  const tgAny = tg as any;
+  
+  // Try initDataUnsafe first (most common)
+  if (tgAny.initDataUnsafe?.user) {
+    return tgAny.initDataUnsafe.user;
+  }
+  
+  // Fallback to other possible locations
+  if (tgAny.initData?.user) {
+    return tgAny.initData.user;
+  }
+  
+  // Debug: log what's available
+  if (tgAny.initDataUnsafe) {
+    console.log('[DEBUG] initDataUnsafe available:', Object.keys(tgAny.initDataUnsafe));
+  }
+  
+  return null;
+}
+
+/**
+ * Log complete Telegram initData structure
+ * Shows all data Telegram sends when Mini App loads
+ */
+export function logTelegramInitData(): void {
+  const tg = getTelegramWebApp();
+  if (!tg) {
+    console.log('[TELEGRAM INIT DATA] Not running in Telegram Mini App');
+    return;
+  }
+
+  const tgAny = tg as any;
+  
+  console.group('📦 Telegram initData Structure');
+  
+  // Raw initData string (URL-encoded)
+  if (tgAny.initData) {
+    console.log('Raw initData (string):', tgAny.initData);
+  }
+  
+  // Parsed initDataUnsafe (easier to use)
+  if (tgAny.initDataUnsafe) {
+    console.log('Parsed initDataUnsafe (object):', tgAny.initDataUnsafe);
+    
+    // User object structure
+    if (tgAny.initDataUnsafe.user) {
+      console.group('👤 User Object:');
+      console.log('Full user object:', tgAny.initDataUnsafe.user);
+      console.log('User ID:', tgAny.initDataUnsafe.user.id);
+      console.log('First Name:', tgAny.initDataUnsafe.user.first_name);
+      console.log('Last Name:', tgAny.initDataUnsafe.user.last_name);
+      console.log('Username:', tgAny.initDataUnsafe.user.username);
+      console.log('Language Code:', tgAny.initDataUnsafe.user.language_code);
+      console.log('Is Premium:', tgAny.initDataUnsafe.user.is_premium);
+      console.log('Photo URL:', tgAny.initDataUnsafe.user.photo_url);
+      console.log('Allows Write to PM:', tgAny.initDataUnsafe.user.allows_write_to_pm);
+      console.groupEnd();
+    }
+    
+    // Chat object (if opened from a chat)
+    if (tgAny.initDataUnsafe.chat) {
+      console.group('💬 Chat Object:');
+      console.log('Chat ID:', tgAny.initDataUnsafe.chat.id);
+      console.log('Chat Type:', tgAny.initDataUnsafe.chat.type);
+      console.log('Chat Title:', tgAny.initDataUnsafe.chat.title);
+      console.log('Chat Username:', tgAny.initDataUnsafe.chat.username);
+      console.log('Chat Photo URL:', tgAny.initDataUnsafe.chat.photo?.url);
+      console.groupEnd();
+    }
+    
+    // Chat type (if opened from a chat)
+    if (tgAny.initDataUnsafe.chat_type) {
+      console.log('Chat Type:', tgAny.initDataUnsafe.chat_type);
+    }
+    
+    // Chat instance (for group chats)
+    if (tgAny.initDataUnsafe.chat_instance) {
+      console.log('Chat Instance:', tgAny.initDataUnsafe.chat_instance);
+    }
+    
+    // Start parameter (if opened with /start parameter)
+    if (tgAny.initDataUnsafe.start_param) {
+      console.log('Start Parameter:', tgAny.initDataUnsafe.start_param);
+    }
+    
+    // Auth date
+    if (tgAny.initDataUnsafe.auth_date) {
+      console.log('Auth Date (Unix timestamp):', tgAny.initDataUnsafe.auth_date);
+      console.log('Auth Date (readable):', new Date(tgAny.initDataUnsafe.auth_date * 1000).toISOString());
+    }
+    
+    // Hash (for verification)
+    if (tgAny.initDataUnsafe.hash) {
+      console.log('Hash (for verification):', tgAny.initDataUnsafe.hash);
+    }
+    
+    // Query ID (for bot queries)
+    if (tgAny.initDataUnsafe.query_id) {
+      console.log('Query ID:', tgAny.initDataUnsafe.query_id);
+    }
+    
+    // Receiver (if opened from a channel)
+    if (tgAny.initDataUnsafe.receiver) {
+      console.log('Receiver:', tgAny.initDataUnsafe.receiver);
+    }
+  }
+  
+  console.groupEnd();
 }
 
 /**
@@ -117,17 +221,12 @@ export function logTelegramInfo(): void {
     version: tgAny.version,
     platform: tgAny.platform,
     colorScheme: tgAny.colorScheme,
-    themeParams: tgAny.themeParams,
-    initData: tgAny.initData ? 'Present' : 'Missing',
+    initDataUnsafe: tgAny.initDataUnsafe ? 'Present' : 'Missing',
     user: user ? {
       id: user.id,
       firstName: user.first_name,
       username: user.username,
     } : 'Not available',
-    isExpanded: tgAny.isExpanded,
-    viewportHeight: tgAny.viewportHeight,
-    viewportStableHeight: tgAny.viewportStableHeight,
-    isReady: tgAny.isReady,
   });
 }
 
@@ -214,7 +313,6 @@ export function initTelegramWebApp(): void {
     
     console.log('[TELEGRAM] WebApp initialized');
     logTelegramInfo();
-    showEnvironmentInfo();
   } catch (error) {
     console.warn('[TELEGRAM] Failed to initialize:', error);
   }
