@@ -43,26 +43,60 @@ SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ### 3. Set Webhook URL
 
-After deploying to Vercel, set the webhook URL for your bot:
+**What is a Webhook?**
+A webhook is like a phone number that Telegram calls whenever someone sends a message to your bot. Instead of your bot constantly asking "Any new messages?", Telegram automatically notifies your server instantly.
 
-```bash
-curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://your-app.vercel.app/api/telegram/webhook"}'
-```
+**After deploying to Vercel, set the webhook URL for your bot:**
 
-Or use this URL format:
+**Method 1: Using Browser (Easiest)**
+1. Replace `<YOUR_BOT_TOKEN>` with your actual bot token
+2. Replace `your-app.vercel.app` with your actual Vercel URL
+3. Open this URL in your browser:
+
 ```
 https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-app.vercel.app/api/telegram/webhook
 ```
 
+**Example:**
+```
+https://api.telegram.org/bot123456789:ABCdefGHIjklMNOpqrsTUVwxyz/setWebhook?url=https://credit-tracker.vercel.app/api/telegram/webhook
+```
+
+You should see: `{"ok":true,"result":true,"description":"Webhook was set"}`
+
+**Method 2: Using PowerShell (Windows)**
+```powershell
+$botToken = "YOUR_BOT_TOKEN"
+$webhookUrl = "https://your-app.vercel.app/api/telegram/webhook"
+Invoke-WebRequest -Uri "https://api.telegram.org/bot$botToken/setWebhook?url=$webhookUrl" -Method POST
+```
+
+**Method 3: Using cURL**
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-app.vercel.app/api/telegram/webhook"
+```
+
 ### 4. Verify Webhook
 
-Check if webhook is set correctly:
+Check if webhook is set correctly by opening this URL in your browser:
 
-```bash
-curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
 ```
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
+```
+
+**Expected Response:**
+```json
+{
+  "ok": true,
+  "result": {
+    "url": "https://your-app.vercel.app/api/telegram/webhook",
+    "has_custom_certificate": false,
+    "pending_update_count": 0
+  }
+}
+```
+
+**See `WEBHOOK_EXPLAINED.md` for detailed explanation of webhooks.**
 
 ## How It Works
 

@@ -505,7 +505,7 @@ function App() {
     // Check for customerId in URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
-    
+
     if (customerId && user && !isLoading && appState.customers.length > 0) {
       // Verify customer exists
       const customer = appState.customers.find(c => c.id === customerId);
