@@ -437,7 +437,7 @@ export default function SettingsPage({ settings, onUpdateSettings, shopInfo, onU
                       const value = e.target.value.replace(/\D/g, '').slice(0, 4);
                       setCurrentPassword(value);
                     }}
-                    className="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left text-2xl tracking-widest"
+                    className="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left"
                     placeholder="Enter current PIN"
                     required
                   />
@@ -464,7 +464,7 @@ export default function SettingsPage({ settings, onUpdateSettings, shopInfo, onU
                       const value = e.target.value.replace(/\D/g, '').slice(0, 4);
                       setNewPassword(value);
                     }}
-                    className="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left text-2xl tracking-widest"
+                    className="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left"
                     placeholder="Enter 4-digit PIN"
                     required
                   />
@@ -491,7 +491,7 @@ export default function SettingsPage({ settings, onUpdateSettings, shopInfo, onU
                       const value = e.target.value.replace(/\D/g, '').slice(0, 4);
                       setConfirmPassword(value);
                     }}
-                    className="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left text-2xl tracking-widest"
+                    className="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left"
                     placeholder="Confirm new PIN"
                     required
                   />
