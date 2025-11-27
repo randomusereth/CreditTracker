@@ -69,10 +69,10 @@ CREATE TABLE IF NOT EXISTS payment_records (
 -- Shop info table
 CREATE TABLE IF NOT EXISTS shop_info (
   user_id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  region TEXT NOT NULL,
-  city TEXT NOT NULL,
-  phone TEXT NOT NULL,
+  name TEXT,
+  region TEXT,
+  city TEXT,
+  phone TEXT,
   email TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
