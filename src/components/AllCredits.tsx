@@ -274,8 +274,31 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
       );
     }
 
-    // Save the PDF
-    doc.save(`all_credits_backup_${new Date().toISOString().split('T')[0]}.pdf`);
+    // Mobile-friendly PDF export
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const fileName = `all_credits_backup_${new Date().toISOString().split('T')[0]}.pdf`;
+
+    // Try to use download attribute (works on desktop)
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Clean up blob URL after a delay
+    setTimeout(() => {
+      URL.revokeObjectURL(pdfUrl);
+    }, 100);
+
+    // For mobile, also try opening in new window as fallback
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      setTimeout(() => {
+        window.open(pdfUrl, '_blank');
+      }, 500);
+    }
   };
 
   return (
@@ -363,8 +386,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                   <button
                     onClick={() => setAmountFilter('none')}
                     className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'none'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                   >
                     All
@@ -372,8 +395,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                   <button
                     onClick={() => setAmountFilter('gt')}
                     className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'gt'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                   >
                     {t('greaterThan')}
@@ -381,8 +404,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                   <button
                     onClick={() => setAmountFilter('lt')}
                     className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'lt'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                   >
                     {t('lessThan')}
@@ -390,8 +413,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                   <button
                     onClick={() => setAmountFilter('range')}
                     className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'range'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                   >
                     {t('range')}

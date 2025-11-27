@@ -120,11 +120,11 @@ const translations: Record<string, Record<string, string>> = {
   },
 };
 
-export function CustomerDetails({ 
-  customer, 
-  credits, 
-  onBack, 
-  onAddCredit, 
+export function CustomerDetails({
+  customer,
+  credits,
+  onBack,
+  onAddCredit,
   settings,
   onUpdateCustomer,
   onDeleteCustomer,
@@ -145,7 +145,7 @@ export function CustomerDetails({
   const [endDate, setEndDate] = useState('');
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({ name: customer.name, phone: customer.phone });
-  const [deleteModal, setDeleteModal] = useState<{isOpen: boolean; type: 'customer' | 'credit'; id: string; name?: string}>({isOpen: false, type: 'credit', id: ''});
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'customer' | 'credit'; id: string; name?: string }>({ isOpen: false, type: 'credit', id: '' });
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
   const [showRecordPayment, setShowRecordPayment] = useState(false);
   const [showBulkPayment, setShowBulkPayment] = useState(false);
@@ -186,7 +186,7 @@ export function CustomerDetails({
 
   const handleSendReminder = (method: 'telegram' | 'sms') => {
     const message = `Hello ${customer.name},\\n\\nThis is a friendly reminder about your outstanding credit balance of ${totalUnpaid.toFixed(2)} ETB.\\n\\nThank you for your business!`;
-    alert(method === 'telegram' 
+    alert(method === 'telegram'
       ? `Telegram message prepared:\\n\\n${message}\\n\\nThis would integrate with Telegram API to send the message.`
       : `SMS message prepared:\\n\\n${message}\\n\\nThis would integrate with SMS service to send the message to ${customer.phone}.`);
   };
@@ -223,7 +223,32 @@ export function CustomerDetails({
       doc.text(`${credit.remainingAmount.toFixed(2)}`, 170, yPos);
       yPos += 7;
     });
-    doc.save(`${customer.name.replace(/\s+/g, '_')}_credits.pdf`);
+
+    // Mobile-friendly PDF export
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const fileName = `${customer.name.replace(/\s+/g, '_')}_credits.pdf`;
+
+    // Try to use download attribute (works on desktop)
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Clean up blob URL after a delay
+    setTimeout(() => {
+      URL.revokeObjectURL(pdfUrl);
+    }, 100);
+
+    // For mobile, also try opening in new window as fallback
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      setTimeout(() => {
+        window.open(pdfUrl, '_blank');
+      }, 500);
+    }
   };
 
   const handleUpdateCustomer = () => {
@@ -236,7 +261,7 @@ export function CustomerDetails({
       {/* Delete Modal */}
       <DeleteConfirmationModal
         isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({...deleteModal, isOpen: false})}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
         onConfirm={() => {
           if (deleteModal.type === 'customer') {
             onDeleteCustomer(deleteModal.id);
@@ -291,16 +316,16 @@ export function CustomerDetails({
                   date: new Date().toISOString(),
                   remainingAfterPayment: credit.totalAmount - update.newPaidAmount,
                 };
-                
+
                 const updatedCredit = {
                   ...credit,
                   paidAmount: update.newPaidAmount,
                   remainingAmount: credit.totalAmount - update.newPaidAmount,
-                  status: update.newPaidAmount >= credit.totalAmount 
+                  status: update.newPaidAmount >= credit.totalAmount
                     ? 'paid' as const
-                    : update.newPaidAmount > 0 
-                    ? 'partially-paid' as const
-                    : 'unpaid' as const,
+                    : update.newPaidAmount > 0
+                      ? 'partially-paid' as const
+                      : 'unpaid' as const,
                   paymentHistory: [...credit.paymentHistory, newPaymentRecord],
                 };
                 onUpdateCredit(updatedCredit);
@@ -312,41 +337,34 @@ export function CustomerDetails({
       )}
 
       {/* Header */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-gray-900 dark:text-white">{customer.name}</h1>
-            <div className="flex items-center gap-4 mt-2">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Phone className="w-4 h-4" />
-                <span>{customer.phone}</span>
-              </div>
-            </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onBack}
+          className="p-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          title="Back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-gray-900 dark:text-white">{customer.name}</h1>
+          <div className="text-gray-600 dark:text-gray-400 mt-1">
+            <span>{customer.phone}</span>
           </div>
         </div>
-        {/* Edit and Delete buttons below name and phone */}
-        <div className="flex gap-2 pl-12">
-          <button
-            onClick={() => setEditingCustomer(true)}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Edit2 className="w-4 h-4" />
-            {t('editCustomer')}
-          </button>
-          <button
-            onClick={() => setDeleteModal({isOpen: true, type: 'customer', id: customer.id, name: customer.name})}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            {t('deleteCustomer')}
-          </button>
-        </div>
+        <button
+          onClick={() => setEditingCustomer(true)}
+          className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+          title={t('editCustomer')}
+        >
+          <Edit2 className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setDeleteModal({ isOpen: true, type: 'customer', id: customer.id, name: customer.name })}
+          className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+          title={t('deleteCustomer')}
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Edit Customer Modal */}
@@ -451,14 +469,14 @@ export function CustomerDetails({
 
       {/* Payment History for this customer */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-        <PaymentHistoryView 
-          paymentHistory={credits.flatMap(credit => 
-            credit.paymentHistory.map(payment => ({ 
+        <PaymentHistoryView
+          paymentHistory={credits.flatMap(credit =>
+            credit.paymentHistory.map(payment => ({
               ...payment,
               note: `${payment.note ? payment.note + ' - ' : ''}${credit.item}`
             }))
-          ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())} 
-          settings={settings} 
+          ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
+          settings={settings}
         />
       </div>
 
@@ -495,11 +513,10 @@ export function CustomerDetails({
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status as any)}
-                      className={`px-3 py-1 rounded-lg text-sm ${
-                        statusFilter === status
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                      }`}
+                      className={`px-3 py-1 rounded-lg text-sm ${statusFilter === status
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
                     >
                       {t(status === 'partially-paid' ? 'partiallyPaid' : status)}
                     </button>
@@ -568,7 +585,7 @@ export function CustomerDetails({
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{credit.remarks || '-'}</td>
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => setDeleteModal({isOpen: true, type: 'credit', id: credit.id, name: credit.item})} className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title={t('delete')}>
+                      <button onClick={() => setDeleteModal({ isOpen: true, type: 'credit', id: credit.id, name: credit.item })} className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title={t('delete')}>
                         <Trash2 className="w-4 h-4" />
                       </button>
                       <button onClick={() => setShowRecordPayment(true)} className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" title="Record Payment">

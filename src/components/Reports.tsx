@@ -83,7 +83,31 @@ export function Reports({ credits, customers, settings }: ReportsProps) {
     doc.text(`Total Customers: ${customers.length}`, 20, 91);
     doc.text(`Total Credit Records: ${credits.length}`, 20, 98);
     
-    doc.save(`credit_report_${period}_${new Date().toISOString().split('T')[0]}.pdf`);
+    // Mobile-friendly PDF export
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const fileName = `credit_report_${period}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    // Try to use download attribute (works on desktop)
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up blob URL after a delay
+    setTimeout(() => {
+      URL.revokeObjectURL(pdfUrl);
+    }, 100);
+    
+    // For mobile, also try opening in new window as fallback
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      setTimeout(() => {
+        window.open(pdfUrl, '_blank');
+      }, 500);
+    }
   };
 
   return (
