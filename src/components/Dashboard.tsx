@@ -236,13 +236,13 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
         <div className="grid grid-cols-2 gap-4">
           {renderStatCard(
             t('paidCredits'),
-            `${formatNumber(totalPaid)} ETB`,
+            `${formatNumber(totalPaid)} ${settings.language === 'am' ? 'ብር' : 'ETB'}`,
             TrendingUp,
             'green'
           )}
           {renderStatCard(
             t('unpaidCredits'),
-            `${formatNumber(totalUnpaid)} ETB`,
+            `${formatNumber(totalUnpaid)} ${settings.language === 'am' ? 'ብር' : 'ETB'}`,
             TrendingDown,
             'red'
           )}
@@ -465,7 +465,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                       {formatNumber(payment.amount)} ETB
                     </td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">
-                      {formatNumber(payment.remainingAfterPayment)} ETB
+                      {formatNumber(payment.remainingAfterPayment)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                       {new Date(payment.date).toLocaleDateString()}

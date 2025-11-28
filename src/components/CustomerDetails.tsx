@@ -428,15 +428,15 @@ export function CustomerDetails({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-400">{t('totalCredits')}</p>
-          <p className="text-gray-900 dark:text-white mt-1 text-2xl">{formatNumber(totalCredits)} ETB</p>
+          <p className="text-gray-900 dark:text-white mt-1 text-2xl">{formatNumber(totalCredits)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-400">{t('totalPaid')}</p>
-          <p className="text-green-600 dark:text-green-400 mt-1 text-2xl">{formatNumber(totalPaid)} ETB</p>
+          <p className="text-green-600 dark:text-green-400 mt-1 text-2xl">{formatNumber(totalPaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-400">{t('outstanding')}</p>
-          <p className="text-red-600 dark:text-red-400 mt-1 text-2xl">{formatNumber(totalUnpaid)} ETB</p>
+          <p className="text-red-600 dark:text-red-400 mt-1 text-2xl">{formatNumber(totalUnpaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
         </div>
       </div>
 
@@ -618,9 +618,9 @@ export function CustomerDetails({
                   <tr key={credit.id} onClick={() => setSelectedCredit(credit)} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(credit.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">{credit.item}</td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white">{formatNumber(credit.totalAmount)} ETB</td>
-                    <td className="px-6 py-4 text-green-600 dark:text-green-400">{formatNumber(credit.paidAmount)} ETB</td>
-                    <td className="px-6 py-4 text-red-600 dark:text-red-400">{formatNumber(credit.remainingAmount)} ETB</td>
+                    <td className="px-6 py-4 text-gray-900 dark:text-white">{formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
+                    <td className="px-6 py-4 text-green-600 dark:text-green-400">{formatNumber(credit.paidAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
+                    <td className="px-6 py-4 text-red-600 dark:text-red-400">{formatNumber(credit.remainingAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs ${credit.status === 'paid' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : credit.status === 'partially-paid' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
                         {t(credit.status === 'paid' ? 'paid' : credit.status === 'partially-paid' ? 'partiallyPaid' : 'unpaid')}

@@ -68,7 +68,7 @@ export function PaymentHistoryView({ paymentHistory, settings }: PaymentHistoryV
                     ? 'text-green-600 dark:text-green-400' 
                     : 'text-red-600 dark:text-red-400'
                 }`}>
-                  {formatNumber(payment.remainingAfterPayment)} ETB
+                  {formatNumber(payment.remainingAfterPayment)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                 </p>
               </div>
             </div>

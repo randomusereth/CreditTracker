@@ -169,15 +169,15 @@ export function Reports({ credits, customers, settings }: ReportsProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-400">Total Credits</p>
-          <p className="text-gray-900 dark:text-white mt-1 text-2xl">{formatNumber(totalCredits)} ETB</p>
+          <p className="text-gray-900 dark:text-white mt-1 text-2xl">{formatNumber(totalCredits)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-400">Total Paid</p>
-          <p className="text-green-600 dark:text-green-400 mt-1 text-2xl">{formatNumber(totalPaid)} ETB</p>
+          <p className="text-green-600 dark:text-green-400 mt-1 text-2xl">{formatNumber(totalPaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-400">Total Unpaid</p>
-          <p className="text-red-600 dark:text-red-400 mt-1 text-2xl">{formatNumber(totalUnpaid)} ETB</p>
+          <p className="text-red-600 dark:text-red-400 mt-1 text-2xl">{formatNumber(totalUnpaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-400">Total Records</p>

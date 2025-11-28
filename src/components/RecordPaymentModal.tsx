@@ -62,7 +62,8 @@ export function RecordPaymentModal({
     }
 
     if (amount > totalOutstanding) {
-      if (!confirm(`Payment amount (${amount.toFixed(2)} ETB) exceeds outstanding balance (${totalOutstanding.toFixed(2)} ETB). Do you want to continue?`)) {
+      const currency = settings.language === 'am' ? 'ብር' : 'ETB';
+      if (!confirm(`Payment amount (${amount.toFixed(2)} ${currency}) exceeds outstanding balance (${totalOutstanding.toFixed(2)} ${currency}). Do you want to continue?`)) {
         return;
       }
     }
@@ -126,7 +127,7 @@ export function RecordPaymentModal({
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <label className="block text-sm text-red-600 dark:text-red-400 mb-1">{t('totalOutstanding')}</label>
             <div className="text-2xl text-red-600 dark:text-red-400 font-semibold">
-              {formatNumber(totalOutstanding)} ETB
+              {formatNumber(totalOutstanding)} {settings.language === 'am' ? 'ብር' : 'ETB'}
             </div>
           </div>
 

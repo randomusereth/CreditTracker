@@ -245,7 +245,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                     const value = parseFormattedNumber(paidAmount || '0');
                     const paid = Math.min(value, total);
                     return formatNumber(paid);
-                  })()} ETB
+                  })()} {settings.language === 'am' ? 'ብር' : 'ETB'}
                 </span>
               </div>
               <div className="flex justify-between pt-2 border-t border-blue-200 dark:border-blue-700">
@@ -256,7 +256,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                     const value = parseFormattedNumber(paidAmount || '0');
                     const paid = Math.min(value, total);
                     return formatNumber(total - paid);
-                  })()} ETB
+                  })()} {settings.language === 'am' ? 'ብር' : 'ETB'}
                 </span>
               </div>
             </div>

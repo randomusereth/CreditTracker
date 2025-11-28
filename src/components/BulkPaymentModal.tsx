@@ -273,7 +273,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                                     ? 'text-green-600 dark:text-green-400 font-medium'
                                     : 'text-gray-400 dark:text-gray-500'
                                 }`}>
-                                  {formatNumber(amountToBePaid)} ETB
+                                  {formatNumber(amountToBePaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-sm">
@@ -284,7 +284,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                                     ? 'text-amber-600 dark:text-amber-400 font-medium'
                                     : 'text-red-600 dark:text-red-400'
                                 }`}>
-                                  {formatNumber(newRemaining)} ETB
+                                  {formatNumber(newRemaining)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-sm">

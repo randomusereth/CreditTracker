@@ -118,11 +118,11 @@ export function Customers({ customers, credits, onAddCustomer, onViewCustomer, s
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600 dark:text-gray-400">{t('totalCredits')}</span>
-                    <span className="text-gray-900 dark:text-white">{formatNumber(stats.total)} ETB</span>
+                    <span className="text-gray-900 dark:text-white">{formatNumber(stats.total)} {settings.language === 'am' ? 'ብር' : 'ETB'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600 dark:text-gray-400">{t('unpaid')}</span>
-                    <span className="text-red-600 dark:text-red-400">{formatNumber(stats.unpaid)} ETB</span>
+                    <span className="text-red-600 dark:text-red-400">{formatNumber(stats.unpaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</span>
                   </div>
                   <div className="text-gray-500 dark:text-gray-400">
                     {stats.count} {stats.count === 1 ? t('credit') : t('credits')}

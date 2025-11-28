@@ -806,8 +806,8 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ ok: true });
     }
 
-    // Handle /allcredits command
-    if (messageText.toLowerCase() === '/allcredits' || messageText.toLowerCase() === '/allcredits@' + (process.env.BOT_USERNAME || '')) {
+    // Handle /report command
+    if (messageText.toLowerCase() === '/report' || messageText.toLowerCase() === '/report@' + (process.env.BOT_USERNAME || '')) {
       console.log('Handling /allcredits command for user:', userId);
 
       // Get all credits
@@ -849,7 +849,7 @@ export default async function handler(req: any, res: any) {
     if (!phoneNumber) {
       await sendTelegramMessage(
         message.chat.id,
-        'Please send a valid phone number.\n\nExample: +251912345678 or 0912345678\n\nOr use /allcredits to get all credits',
+        'Please send a valid phone number.\n\nExample: +251912345678 or 0912345678\n\nOr use /report to get all credits',
         message.message_id
       );
       return res.status(200).json({ ok: true });
