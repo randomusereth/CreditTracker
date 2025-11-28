@@ -288,9 +288,9 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
     return sum + (isNaN(amount) ? 0 : amount);
   }, 0);
 
-  let message = '*ጠቅላላ የብድር ታሪክ*\n';
+  let message = '*🗒ጠቅላላ የብድር ታሪክ 🗒*\n\n';
   
-  message += `**የብድር ብዛት**: ${credits.length}\n`;
+  message += `*የብድር ብዛት*: ${credits.length}\n`;
   message += `**ጠቅላላ የብድር መጠን**: ${formatNumberWithCommas(totalCreditsAmount)} ብር\n`;
   message += `**ጠቅላላ የተከፈለ**: ${formatNumberWithCommas(totalPaidAmount)} ብር\n`;
   message += `**ቀሪ የሚከፈል**: ${formatNumberWithCommas(totalRemainingAmount)} ብር\n\n`;
