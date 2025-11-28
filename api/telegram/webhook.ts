@@ -290,10 +290,10 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
 
   let message = '*🗒 ጠቅላላ የብድር ታሪክ *\n\n';
   
-  message += `*የብድር ብዛት*: ${credits.length}\n`;
-  message += `*ጠቅላላ የብድር መጠን*: ${formatNumberWithCommas(totalCreditsAmount)} ብር\n`;
-  message += `*ጠቅላላ የተከፈለ*: ${formatNumberWithCommas(totalPaidAmount)} ብር\n`;
-  message += `*ቀሪ የሚከፈል*: ${formatNumberWithCommas(totalRemainingAmount)} ብር\n\n`;
+  message += `የብድር ብዛት: ${credits.length}\n`;
+  message += `ጠቅላላ የብድር መጠን: *${formatNumberWithCommas(totalCreditsAmount)} ብር*\n`;
+  message += `ጠቅላላ የተከፈለ: *${formatNumberWithCommas(totalPaidAmount)} ብር*\n`;
+  message += `ቀሪ የሚከፈል: *${formatNumberWithCommas(totalRemainingAmount)} ብር*\n\n`;
   message += '───────────────────\n\n';
 
   // Sort customers by name for consistent ordering
