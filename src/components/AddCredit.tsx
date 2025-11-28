@@ -234,7 +234,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
                 <span className="text-gray-900 dark:text-white">
-                  {formatNumber(parseFormattedNumber(totalAmount || '0'))} ETB
+                  {formatNumber(parseFormattedNumber(totalAmount || '0'))} {settings.language === 'am' ? 'ብር' : 'ETB'}
                 </span>
               </div>
               <div className="flex justify-between">

@@ -569,13 +569,13 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                         {credit.item}
                       </td>
                       <td className="px-6 py-4 text-gray-900 dark:text-white">
-                        {formatNumber(credit.totalAmount)} ETB
+                        {formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                       </td>
                       <td className="px-6 py-4 text-green-600 dark:text-green-400">
-                        {formatNumber(credit.paidAmount)} ETB
+                        {formatNumber(credit.paidAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                       </td>
                       <td className="px-6 py-4 text-red-600 dark:text-red-400">
-                        {formatNumber(credit.remainingAmount)} ETB
+                        {formatNumber(credit.remainingAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`

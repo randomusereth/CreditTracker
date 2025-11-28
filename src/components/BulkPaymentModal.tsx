@@ -194,7 +194,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                   </label>
                   <div className="text-right">
                     <p className="text-sm text-gray-600 dark:text-gray-400">{t('totalOutstanding')}</p>
-                    <p className="text-red-600 dark:text-red-400">{formatNumber(totalOutstanding)} ETB</p>
+                    <p className="text-red-600 dark:text-red-400">{formatNumber(totalOutstanding)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
                   </div>
                 </div>
                 <input
@@ -215,7 +215,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                 {!error && paymentAmount && parseFormattedNumber(paymentAmount) > 0 && (
                   <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm">
                     <CheckCircle className="w-4 h-4" />
-                    {t('remaining')}: {formatNumber(totalOutstanding - (parseFormattedNumber(paymentAmount) || 0))} ETB
+                    {t('remaining')}: {formatNumber(totalOutstanding - (parseFormattedNumber(paymentAmount) || 0))} {settings.language === 'am' ? 'ብር' : 'ETB'}
                   </div>
                 )}
                 <p className="text-sm text-gray-600 dark:text-gray-400 italic">

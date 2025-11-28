@@ -220,7 +220,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
         <div className="grid grid-cols-2 gap-4">
           {renderStatCard(
             t('totalCredits'),
-            `${formatNumber(totalCredits)} ETB`,
+            `${formatNumber(totalCredits)} ${settings.language === 'am' ? 'ብር' : 'ETB'}`,
             DollarSign,
             'blue',
             'up'
@@ -297,7 +297,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                         </div>
                         {totalUnpaid > 0 && (
                           <p className="text-red-600 dark:text-red-400 text-xs mt-1">
-                            {formatNumber(totalUnpaid)} ETB unpaid
+                            {formatNumber(totalUnpaid)} {settings.language === 'am' ? 'ብር' : 'ETB'} unpaid
                           </p>
                         )}
                       </div>
@@ -386,7 +386,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                       {credit.item}
                     </td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">
-                      {formatNumber(credit.totalAmount)} ETB
+                      {formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`
@@ -462,7 +462,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                       {payment.credit.item}
                     </td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">
-                      {formatNumber(payment.amount)} ETB
+                      {formatNumber(payment.amount)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                     </td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">
                       {formatNumber(payment.remainingAfterPayment)} {settings.language === 'am' ? 'ብር' : 'ETB'}

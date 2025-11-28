@@ -120,7 +120,7 @@ export function RecordPaymentModal({
           <div>
             <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">{t('credit')}</label>
             <div className="text-gray-900 dark:text-white font-medium">{credit.item}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total: {formatNumber(credit.totalAmount)} ETB</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Total: {formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</div>
           </div>
 
           {/* Total Outstanding */}

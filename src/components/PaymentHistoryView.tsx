@@ -49,7 +49,7 @@ export function PaymentHistoryView({ paymentHistory, settings }: PaymentHistoryV
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <span className="text-green-600 dark:text-green-400">{formatNumber(payment.amount)} ETB</span>
+                  <span className="text-green-600 dark:text-green-400">{formatNumber(payment.amount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Clock className="w-4 h-4" />
