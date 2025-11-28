@@ -11,3 +11,4 @@ ALTER TABLE shop_info
 -- Note: email is already optional (no NOT NULL constraint)
 
 
+

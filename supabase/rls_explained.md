@@ -73,3 +73,4 @@ For now, with your current setup (anon key + custom auth), you have two choices:
 2. **Use RLS with user_id filtering** - More secure, but requires careful implementation
 
 
+

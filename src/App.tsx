@@ -834,6 +834,7 @@ function App() {
               }));
               return newCustomer.id;
             }}
+            settings={appState.settings}
           />
         );
       case 'all-credits':

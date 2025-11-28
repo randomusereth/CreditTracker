@@ -57,3 +57,4 @@ CREATE POLICY "Allow all for authenticated users" ON users
 -- For now, Option A is the simplest that keeps RLS enabled.
 
 
+

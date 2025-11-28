@@ -92,3 +92,4 @@ After adding variables in Vercel:
 - Always use your **actual Vercel URL** (not the placeholder)
 
 
+

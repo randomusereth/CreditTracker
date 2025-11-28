@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, User, Package, FileText, DollarSign, Percent, UserPlus, AlertCircle, Phone, X } from 'lucide-react';
 import { Customer, Credit } from '../App';
+import { AppSettings } from '../types';
 import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
 import { validateEthiopianPhone } from '../utils/phoneValidation';
 
@@ -10,9 +11,10 @@ type AddCreditProps = {
   onAddCredit: (credit: Omit<Credit, 'id' | 'date' | 'status'>) => void;
   onCancel: () => void;
   onAddCustomer?: (customer: Omit<Customer, 'id' | 'createdAt'>) => string; // Returns new customer ID
+  settings: AppSettings;
 };
 
-export default function AddCredit({ customers, preselectedCustomerId, onAddCredit, onCancel, onAddCustomer }: AddCreditProps) {
+export default function AddCredit({ customers, preselectedCustomerId, onAddCredit, onCancel, onAddCustomer, settings }: AddCreditProps) {
   const [customerId, setCustomerId] = useState(preselectedCustomerId || '');
   const [item, setItem] = useState('');
   const [remarks, setRemarks] = useState('');

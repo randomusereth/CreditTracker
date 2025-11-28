@@ -42,3 +42,4 @@ CREATE POLICY "Users see own settings" ON settings
 -- ✅ Even if API key is compromised, users can't access others' data
 
 
+
