@@ -183,27 +183,25 @@ async function getCustomerCreditInfo(
     }
 
     // Handle case where credits is null or undefined
-    if (!credits) {
-      credits = [];
-    }
+    const creditsList = credits || [];
 
-    console.log('Found credits count:', credits.length);
+    console.log('Found credits count:', creditsList.length);
 
     // Calculate totals - handle numeric types from Supabase
-    const totalCredits = credits.reduce((sum, c) => {
+    const totalCredits = creditsList.reduce((sum, c) => {
       const amount = typeof c.total_amount === 'number' ? c.total_amount : parseFloat(c.total_amount.toString());
       return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
-    const totalPaid = credits.reduce((sum, c) => {
+    const totalPaid = creditsList.reduce((sum, c) => {
       const amount = typeof c.paid_amount === 'number' ? c.paid_amount : parseFloat(c.paid_amount.toString());
       return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
-    const totalOutstanding = credits.reduce((sum, c) => {
+    const totalOutstanding = creditsList.reduce((sum, c) => {
       const amount = typeof c.remaining_amount === 'number' ? c.remaining_amount : parseFloat(c.remaining_amount.toString());
       return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
-    const unpaidCount = credits.filter(c => c.status === 'unpaid').length;
-    const partiallyPaidCount = credits.filter(c => c.status === 'partially-paid').length;
+    const unpaidCount = creditsList.filter(c => c.status === 'unpaid').length;
+    const partiallyPaidCount = creditsList.filter(c => c.status === 'partially-paid').length;
 
     return {
       customerId: customer.id,
@@ -329,6 +327,271 @@ async function sendTelegramMessage(chatId: number, text: string, replyToMessageI
 }
 
 /**
+ * Get all credits for a user
+ */
+async function getAllCreditsForUser(userId: string) {
+  if (!supabase) {
+    return null;
+  }
+
+  try {
+    // Get all customers for this user
+    const { data: customers, error: customersError } = await supabase
+      .from('customers')
+      .select('id, name, phone')
+      .eq('user_id', userId);
+
+    if (customersError) {
+      console.error('Error fetching customers:', customersError);
+      return null;
+    }
+
+    if (!customers || customers.length === 0) {
+      return { customers: [], credits: [] };
+    }
+
+    // Get all credits for all customers
+    const { data: credits, error: creditsError } = await supabase
+      .from('credits')
+      .select('id, customer_id, item, total_amount, paid_amount, remaining_amount, status, date, remarks')
+      .eq('user_id', userId)
+      .order('date', { ascending: false });
+
+    if (creditsError) {
+      console.error('Error fetching credits:', creditsError);
+      return null;
+    }
+
+    return {
+      customers: customers || [],
+      credits: credits || [],
+    };
+  } catch (error) {
+    console.error('Error getting all credits:', error);
+    return null;
+  }
+}
+
+/**
+ * Generate PDF for all credits
+ */
+async function generateAllCreditsPDF(customers: any[], credits: any[]): Promise<Buffer | null> {
+  try {
+    // Dynamically import jsPDF
+    const jsPDF = (await import('jspdf')).default;
+    const doc = new jsPDF();
+    
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    let yPosition = margin;
+    const lineHeight = 7;
+    const maxY = pageHeight - margin;
+
+    // Helper function to add a new page if needed
+    const checkNewPage = (requiredSpace: number) => {
+      if (yPosition + requiredSpace > maxY) {
+        doc.addPage();
+        yPosition = margin;
+        return true;
+      }
+      return false;
+    };
+
+    function formatNumber(num: number): string {
+      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('All Credits Report', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += lineHeight * 2;
+
+    // Export date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Exported on: ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += lineHeight * 2;
+
+    // Summary
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary', margin, yPosition);
+    yPosition += lineHeight;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const totalCreditsAmount = credits.reduce((sum, c) => {
+      const amount = typeof c.total_amount === 'number' ? c.total_amount : parseFloat(c.total_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    const totalPaidAmount = credits.reduce((sum, c) => {
+      const amount = typeof c.paid_amount === 'number' ? c.paid_amount : parseFloat(c.paid_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    const totalRemainingAmount = credits.reduce((sum, c) => {
+      const amount = typeof c.remaining_amount === 'number' ? c.remaining_amount : parseFloat(c.remaining_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+
+    doc.text(`Total Credits: ${credits.length}`, margin, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Total Amount: ${formatNumber(totalCreditsAmount)} ETB`, margin, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Total Paid: ${formatNumber(totalPaidAmount)} ETB`, margin, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Total Remaining: ${formatNumber(totalRemainingAmount)} ETB`, margin, yPosition);
+    yPosition += lineHeight * 2;
+
+    // Table header
+    checkNewPage(lineHeight * 2);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Credits Details', margin, yPosition);
+    yPosition += lineHeight * 1.5;
+
+    // Table columns
+    const colWidths = [35, 30, 35, 25, 25, 25, 20];
+    const headers = ['Customer', 'Phone', 'Item', 'Total', 'Paid', 'Remaining', 'Status'];
+    let xPosition = margin;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    headers.forEach((header, index) => {
+      doc.text(header, xPosition, yPosition);
+      xPosition += colWidths[index];
+    });
+    yPosition += lineHeight;
+
+    // Draw line under header
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += lineHeight * 0.5;
+
+    // Table rows
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+
+    credits.forEach((credit, index) => {
+      checkNewPage(lineHeight * 2);
+
+      const customer = customers.find(c => c.id === credit.customer_id);
+      const customerName = customer?.name || 'Unknown';
+      const phone = customer?.phone || '-';
+      const item = credit.item && credit.item.length > 20 ? credit.item.substring(0, 20) + '...' : (credit.item || '-');
+      const total = formatNumber(typeof credit.total_amount === 'number' ? credit.total_amount : parseFloat(credit.total_amount.toString()));
+      const paid = formatNumber(typeof credit.paid_amount === 'number' ? credit.paid_amount : parseFloat(credit.paid_amount.toString()));
+      const remaining = formatNumber(typeof credit.remaining_amount === 'number' ? credit.remaining_amount : parseFloat(credit.remaining_amount.toString()));
+      const status = credit.status === 'paid' ? 'Paid' : credit.status === 'partially-paid' ? 'Partial' : 'Unpaid';
+
+      xPosition = margin;
+      const rowData = [customerName, phone, item, total, paid, remaining, status];
+
+      rowData.forEach((data, colIndex) => {
+        // Truncate text if too long
+        let text = String(data);
+        if (colIndex === 0 && text.length > 15) text = text.substring(0, 15) + '...';
+        if (colIndex === 2 && text.length > 20) text = text.substring(0, 20) + '...';
+
+        doc.text(text, xPosition, yPosition);
+        xPosition += colWidths[colIndex];
+      });
+
+      yPosition += lineHeight;
+
+      // Add separator line every 5 rows
+      if ((index + 1) % 5 === 0 && index < credits.length - 1) {
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += lineHeight * 0.5;
+      }
+    });
+
+    // Footer
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: 'center' }
+      );
+    }
+
+    // Generate PDF as buffer
+    const pdfArrayBuffer = doc.output('arraybuffer');
+    return Buffer.from(pdfArrayBuffer);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    return null;
+  }
+}
+
+/**
+ * Send PDF document to Telegram
+ */
+async function sendTelegramDocument(chatId: number, pdfBuffer: Buffer, fileName: string, caption?: string) {
+  const url = `${TELEGRAM_API_URL}${BOT_TOKEN}/sendDocument`;
+  
+  try {
+    // Construct multipart/form-data manually
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+    const parts: Buffer[] = [];
+    
+    // Add chat_id
+    parts.push(Buffer.from(`--${boundary}\r\n`));
+    parts.push(Buffer.from(`Content-Disposition: form-data; name="chat_id"\r\n\r\n`));
+    parts.push(Buffer.from(chatId.toString()));
+    parts.push(Buffer.from(`\r\n`));
+    
+    // Add document
+    parts.push(Buffer.from(`--${boundary}\r\n`));
+    parts.push(Buffer.from(`Content-Disposition: form-data; name="document"; filename="${fileName}"\r\n`));
+    parts.push(Buffer.from(`Content-Type: application/pdf\r\n\r\n`));
+    parts.push(pdfBuffer);
+    parts.push(Buffer.from(`\r\n`));
+    
+    // Add caption if provided
+    if (caption) {
+      parts.push(Buffer.from(`--${boundary}\r\n`));
+      parts.push(Buffer.from(`Content-Disposition: form-data; name="caption"\r\n\r\n`));
+      parts.push(Buffer.from(caption));
+      parts.push(Buffer.from(`\r\n`));
+    }
+    
+    // Close boundary
+    parts.push(Buffer.from(`--${boundary}--\r\n`));
+    
+    const body = Buffer.concat(parts);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': body.length.toString(),
+      },
+      body: body,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Telegram API error sending document:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error sending Telegram document:', error);
+    return false;
+  }
+}
+
+/**
  * Main webhook handler
  * Vercel serverless function format
  */
@@ -411,7 +674,7 @@ export default async function handler(req: any, res: any) {
 
     const message = update.message;
     const telegramUserId = message.from.id.toString();
-    const messageText = message.text.trim();
+    const messageText = message.text?.trim() || '';
 
     // Get user ID from Telegram ID
     const userId = await getUserIdFromTelegramId(telegramUserId);
@@ -425,13 +688,79 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ ok: true });
     }
 
+    // Handle /allcredits command
+    if (messageText.toLowerCase() === '/allcredits' || messageText.toLowerCase() === '/allcredits@' + (process.env.BOT_USERNAME || '')) {
+      console.log('Handling /allcredits command for user:', userId);
+      
+      // Send processing message
+      await sendTelegramMessage(
+        message.chat.id,
+        '📄 Generating PDF report... Please wait.',
+        message.message_id
+      );
+
+      // Get all credits
+      const allCreditsData = await getAllCreditsForUser(userId);
+      
+      if (!allCreditsData) {
+        await sendTelegramMessage(
+          message.chat.id,
+          '❌ Error fetching credits data. Please try again later.',
+          message.message_id
+        );
+        return res.status(200).json({ ok: true });
+      }
+
+      if (allCreditsData.credits.length === 0) {
+        await sendTelegramMessage(
+          message.chat.id,
+          '📭 No credits found. Add some credits first!',
+          message.message_id
+        );
+        return res.status(200).json({ ok: true });
+      }
+
+      // Generate PDF
+      const pdfBuffer = await generateAllCreditsPDF(allCreditsData.customers, allCreditsData.credits);
+      
+      if (!pdfBuffer) {
+        await sendTelegramMessage(
+          message.chat.id,
+          '❌ Error generating PDF. Please try again later.',
+          message.message_id
+        );
+        return res.status(200).json({ ok: true });
+      }
+
+      // Send PDF
+      const fileName = `all_credits_${new Date().toISOString().split('T')[0]}.pdf`;
+      const caption = `📊 *All Credits Report*\n\nGenerated on: ${new Date().toLocaleDateString()}\n\nTotal Credits: ${allCreditsData.credits.length}`;
+      
+      const sent = await sendTelegramDocument(
+        message.chat.id,
+        pdfBuffer,
+        fileName,
+        caption
+      );
+
+      if (!sent) {
+        await sendTelegramMessage(
+          message.chat.id,
+          '❌ Error sending PDF. Please try again later.',
+          message.message_id
+        );
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
     // Extract phone number from message
     const phoneNumber = extractPhoneNumber(messageText);
 
     if (!phoneNumber) {
       await sendTelegramMessage(
         message.chat.id,
-        '📱 Please send a valid phone number.\n\nExample: +251912345678 or 0912345678',
+        '📱 Please send a valid phone number.\n\nExample: +251912345678 or 0912345678\n\nOr use /allcredits to get all credits PDF',
         message.message_id
       );
       return res.status(200).json({ ok: true });
