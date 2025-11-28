@@ -265,7 +265,7 @@ export function BulkPaymentModal({ isOpen, onClose, credits, onApplyPayment, set
                               </td>
                               <td className="px-4 py-3 text-gray-900 dark:text-white text-sm">{credit.item}</td>
                               <td className="px-4 py-3 text-red-600 dark:text-red-400 text-sm">
-                                {formatNumber(currentRemaining)} ETB
+                                {formatNumber(currentRemaining)} {settings.language === 'am' ? 'ብር' : 'ETB'}
                               </td>
                               <td className="px-4 py-3 text-sm">
                                 <span className={`${
