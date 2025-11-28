@@ -10,3 +10,4 @@ GRANT ALL ON SCHEMA public TO public;
 
 -- After running this, you'll need to run schema.sql again to recreate tables
 
+

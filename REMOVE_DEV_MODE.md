@@ -30,3 +30,4 @@ When ready for production deployment, remove the console prompt fallback:
 
 The app will only work when opened from Telegram Mini App, which is the intended behavior for production.
 
+

@@ -151,7 +151,8 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
 
   const hasActiveFilters = amountFilter !== 'none' || singleDate || (dateFilterType === 'range' && (startDate || endDate)) || searchTerm;
 
-  const handleExportPDF = () => {
+  const handleDownloadPDF = () => {
+    // Generate PDF on client side
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -282,31 +283,31 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
       );
     }
 
-    // Mobile-friendly PDF export
+    // Generate PDF as blob and force download
     const pdfBlob = doc.output('blob');
     const pdfUrl = URL.createObjectURL(pdfBlob);
-    const fileName = `all_credits_backup_${new Date().toISOString().split('T')[0]}.pdf`;
-
-    // Try to use download attribute (works on desktop)
+    const fileName = `all_credits_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    // Create download link
     const link = document.createElement('a');
     link.href = pdfUrl;
     link.download = fileName;
     link.style.display = 'none';
     document.body.appendChild(link);
+    
+    // Trigger download
     link.click();
+    
+    // Also open in new tab for viewing
+    setTimeout(() => {
+      window.open(pdfUrl, '_blank');
+    }, 100);
+    
+    // Clean up
     document.body.removeChild(link);
-
-    // Clean up blob URL after a delay
     setTimeout(() => {
       URL.revokeObjectURL(pdfUrl);
-    }, 100);
-
-    // For mobile, also try opening in new window as fallback
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      setTimeout(() => {
-        window.open(pdfUrl, '_blank');
-      }, 500);
-    }
+    }, 1000);
   };
 
   return (
@@ -339,6 +340,13 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
             </p>
           </div>
         </div>
+        <button
+          onClick={handleDownloadPDF}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
+          <Download className="w-4 h-4" />
+          {t('exportPDF')}
+        </button>
       </div>
 
       {/* Search and Filter Bar */}
