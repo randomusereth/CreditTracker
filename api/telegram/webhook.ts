@@ -288,7 +288,7 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
     return sum + (isNaN(amount) ? 0 : amount);
   }, 0);
 
-  let message = '*ALL CREDITS REPORT*\n';
+  let message = '*ጠቅላላ የብድር ታሪክ*\n';
   
   message += `የብድር ብዛት: ${credits.length}\n`;
   message += `ጠቅላላ የብድር መጠን: ${formatNumberWithCommas(totalCreditsAmount)} ብር\n`;
@@ -335,7 +335,7 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
       const item = credit.item || '-';
       const total = typeof credit.total_amount === 'number' ? credit.total_amount : parseFloat(credit.total_amount.toString());
     
-      const status = credit.status === 'paid' ? 'ተከፍሏል' : credit.status === 'partially-paid' ? 'በከፊል ተከፍሏል' : 'አልተከፈለም';
+      const status = credit.status === 'paid' ? 'ተከፍሏል ✅' : credit.status === 'partially-paid' ? 'በከፊል ተከፍሏል 🔵' : 'አልተከፈለም ❌';
       const date = credit.date ? new Date(credit.date).toLocaleDateString() : '-';
 
       message += `${creditIndex + 1}. ${item}\n`;
