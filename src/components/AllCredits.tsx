@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { Customer, Credit, AppSettings } from '../App';
-import { Search, Filter, X, CreditCard as CreditCardIcon, Download } from 'lucide-react';
+import { Search, Filter, X, CreditCard as CreditCardIcon } from 'lucide-react';
 import { CreditDetailsModal } from './CreditDetailsModal';
 import { formatNumber } from '../utils/formatNumber';
-import jsPDF from 'jspdf';
-import { getCurrentUser } from '../lib/auth';
-import { getTelegramUserId } from '../lib/auth';
 
 interface AllCreditsProps {
   credits: Credit[];
@@ -152,58 +149,6 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
   };
 
   const hasActiveFilters = amountFilter !== 'none' || singleDate || (dateFilterType === 'range' && (startDate || endDate)) || searchTerm;
-
-  const handleSendPDFViaBot = async () => {
-    try {
-      const user = getCurrentUser();
-      const telegramUserId = getTelegramUserId();
-
-      if (!user || !telegramUserId) {
-        alert(settings.language === 'am' 
-          ? 'እባክዎ በመጀመሪያ ይግቡ' 
-          : 'Please log in first');
-        return;
-      }
-
-      // Show loading message
-      const loadingMessage = settings.language === 'am' 
-        ? 'PDF እየተጠናቀቀ ነው... እባክዎ ይጠብቁ' 
-        : 'Generating PDF... Please wait';
-      
-      // You could show a toast/notification here
-      console.log(loadingMessage);
-
-      // Call API to generate and send PDF via bot
-      const response = await fetch('/api/credits/send-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          telegramUserId: telegramUserId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Show success message
-        const successMessage = settings.language === 'am'
-          ? '✅ PDF በቦት ውስጥ ተልኳል! እባክዎ ቦት ውስጥ ይመልከቱ'
-          : '✅ PDF sent to bot! Please check your Telegram chat';
-        alert(successMessage);
-      } else {
-        throw new Error(result.error || 'Failed to send PDF');
-      }
-    } catch (error) {
-      console.error('Error sending PDF via bot:', error);
-      const errorMessage = settings.language === 'am'
-        ? '❌ PDF ላክ አልቻለም. እባክዎ ይሞክሩ'
-        : '❌ Failed to send PDF. Please try again';
-      alert(errorMessage);
-    }
-  };
 
   const handleDownloadPDF = () => {
     // Generate PDF on client side
@@ -394,13 +339,6 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
             </p>
           </div>
         </div>
-        <button
-          onClick={handleSendPDFViaBot}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-        >
-          <Download className="w-4 h-4" />
-          {t('exportPDF')}
-        </button>
       </div>
 
       {/* Search and Filter Bar */}

@@ -258,6 +258,107 @@ async function getUserIdFromTelegramId(telegramId: string): Promise<string | nul
 function formatNumberWithCommas(num: number): string {
   return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+/**
+ * Format all credits as structured text message
+ */
+function formatAllCreditsMessage(customers: any[], credits: any[]): string {
+  // Group credits by customer
+  const creditsByCustomer = new Map<string, any[]>();
+  
+  credits.forEach(credit => {
+    const customerId = credit.customer_id;
+    if (!creditsByCustomer.has(customerId)) {
+      creditsByCustomer.set(customerId, []);
+    }
+    creditsByCustomer.get(customerId)!.push(credit);
+  });
+
+  // Calculate totals
+  const totalCreditsAmount = credits.reduce((sum, c) => {
+    const amount = typeof c.total_amount === 'number' ? c.total_amount : parseFloat(c.total_amount.toString());
+    return sum + (isNaN(amount) ? 0 : amount);
+  }, 0);
+  const totalPaidAmount = credits.reduce((sum, c) => {
+    const amount = typeof c.paid_amount === 'number' ? c.paid_amount : parseFloat(c.paid_amount.toString());
+    return sum + (isNaN(amount) ? 0 : amount);
+  }, 0);
+  const totalRemainingAmount = credits.reduce((sum, c) => {
+    const amount = typeof c.remaining_amount === 'number' ? c.remaining_amount : parseFloat(c.remaining_amount.toString());
+    return sum + (isNaN(amount) ? 0 : amount);
+  }, 0);
+
+  let message = '*ALL CREDITS REPORT*\n';
+  message += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+  message += `Total Credits: ${credits.length}\n`;
+  message += `Total Amount: ${formatNumberWithCommas(totalCreditsAmount)} ETB\n`;
+  message += `Total Paid: ${formatNumberWithCommas(totalPaidAmount)} ETB\n`;
+  message += `Total Remaining: ${formatNumberWithCommas(totalRemainingAmount)} ETB\n\n`;
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+
+  // Sort customers by name for consistent ordering
+  const sortedCustomerIds = Array.from(creditsByCustomer.keys()).sort((a, b) => {
+    const customerA = customers.find(c => c.id === a);
+    const customerB = customers.find(c => c.id === b);
+    const nameA = customerA?.name || '';
+    const nameB = customerB?.name || '';
+    return nameA.localeCompare(nameB);
+  });
+
+  sortedCustomerIds.forEach((customerId, index) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const customerCredits = creditsByCustomer.get(customerId)!;
+    
+    // Calculate customer totals
+    const customerTotal = customerCredits.reduce((sum, c) => {
+      const amount = typeof c.total_amount === 'number' ? c.total_amount : parseFloat(c.total_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    const customerPaid = customerCredits.reduce((sum, c) => {
+      const amount = typeof c.paid_amount === 'number' ? c.paid_amount : parseFloat(c.paid_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    const customerRemaining = customerCredits.reduce((sum, c) => {
+      const amount = typeof c.remaining_amount === 'number' ? c.remaining_amount : parseFloat(c.remaining_amount.toString());
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+
+    // Customer header
+    message += `*${customer.name}*\n`;
+    message += `Phone: ${customer.phone}\n`;
+    message += `Credits: ${customerCredits.length} | Total: ${formatNumberWithCommas(customerTotal)} ETB | Paid: ${formatNumberWithCommas(customerPaid)} ETB | Remaining: ${formatNumberWithCommas(customerRemaining)} ETB\n\n`;
+
+    // List credits for this customer
+    customerCredits.forEach((credit, creditIndex) => {
+      const item = credit.item || '-';
+      const total = typeof credit.total_amount === 'number' ? credit.total_amount : parseFloat(credit.total_amount.toString());
+      const paid = typeof credit.paid_amount === 'number' ? credit.paid_amount : parseFloat(credit.paid_amount.toString());
+      const remaining = typeof credit.remaining_amount === 'number' ? credit.remaining_amount : parseFloat(credit.remaining_amount.toString());
+      const status = credit.status === 'paid' ? 'Paid' : credit.status === 'partially-paid' ? 'Partial' : 'Unpaid';
+      const date = credit.date ? new Date(credit.date).toLocaleDateString() : '-';
+
+      message += `${creditIndex + 1}. ${item}\n`;
+      message += `   Date: ${date} | Total: ${formatNumberWithCommas(total)} ETB | Paid: ${formatNumberWithCommas(paid)} ETB | Remaining: ${formatNumberWithCommas(remaining)} ETB\n`;
+      message += `   Status: ${status}\n`;
+      
+      if (credit.remarks) {
+        message += `   Remarks: ${credit.remarks}\n`;
+      }
+      
+      message += '\n';
+    });
+
+    // Separator line between customers (except last one)
+    if (index < sortedCustomerIds.length - 1) {
+      message += '────────────────────────────────────\n\n';
+    }
+  });
+
+  return message;
+}
+
 /**
  * Format credit info message
  */
@@ -709,13 +810,6 @@ export default async function handler(req: any, res: any) {
     // Handle /allcredits command
     if (messageText.toLowerCase() === '/allcredits' || messageText.toLowerCase() === '/allcredits@' + (process.env.BOT_USERNAME || '')) {
       console.log('Handling /allcredits command for user:', userId);
-      
-      // Send processing message
-      await sendTelegramMessage(
-        message.chat.id,
-        '📄 Generating PDF report... Please wait.',
-        message.message_id
-      );
 
       // Get all credits
       const allCreditsData = await getAllCreditsForUser(userId);
@@ -723,7 +817,7 @@ export default async function handler(req: any, res: any) {
       if (!allCreditsData) {
         await sendTelegramMessage(
           message.chat.id,
-          '❌ Error fetching credits data. Please try again later.',
+          'Error fetching credits data. Please try again later.',
           message.message_id
         );
         return res.status(200).json({ ok: true });
@@ -732,46 +826,20 @@ export default async function handler(req: any, res: any) {
       if (allCreditsData.credits.length === 0) {
         await sendTelegramMessage(
           message.chat.id,
-          '📭 No credits found. Add some credits first!',
+          'No credits found. Add some credits first!',
           message.message_id
         );
         return res.status(200).json({ ok: true });
       }
 
-      // Generate PDF
-      console.log('Starting PDF generation for', allCreditsData.credits.length, 'credits');
-      const pdfBuffer = await generateAllCreditsPDF(allCreditsData.customers, allCreditsData.credits);
+      // Format and send credits as text message
+      const creditsMessage = formatAllCreditsMessage(allCreditsData.customers, allCreditsData.credits);
       
-      if (!pdfBuffer) {
-        console.error('PDF generation failed - returned null');
-        await sendTelegramMessage(
-          message.chat.id,
-          '❌ Error generating PDF. Please check server logs for details.',
-          message.message_id
-        );
-        return res.status(200).json({ ok: true });
-      }
-      
-      console.log('PDF generated successfully, size:', pdfBuffer.length, 'bytes');
-
-      // Send PDF
-      const fileName = `all_credits_${new Date().toISOString().split('T')[0]}.pdf`;
-      const caption = `📊 *All Credits Report*\n\nGenerated on: ${new Date().toLocaleDateString()}\n\nTotal Credits: ${allCreditsData.credits.length}`;
-      
-      const sent = await sendTelegramDocument(
+      await sendTelegramMessage(
         message.chat.id,
-        pdfBuffer,
-        fileName,
-        caption
+        creditsMessage,
+        message.message_id
       );
-
-      if (!sent) {
-        await sendTelegramMessage(
-          message.chat.id,
-          '❌ Error sending PDF. Please try again later.',
-          message.message_id
-        );
-      }
 
       return res.status(200).json({ ok: true });
     }
@@ -782,7 +850,7 @@ export default async function handler(req: any, res: any) {
     if (!phoneNumber) {
       await sendTelegramMessage(
         message.chat.id,
-        '📱 Please send a valid phone number.\n\nExample: +251912345678 or 0912345678\n\nOr use /allcredits to get all credits PDF',
+        'Please send a valid phone number.\n\nExample: +251912345678 or 0912345678\n\nOr use /allcredits to get all credits',
         message.message_id
       );
       return res.status(200).json({ ok: true });
