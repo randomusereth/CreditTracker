@@ -378,7 +378,15 @@ async function getAllCreditsForUser(userId: string) {
 async function generateAllCreditsPDF(customers: any[], credits: any[]): Promise<Buffer | null> {
   try {
     // Dynamically import jsPDF
-    const jsPDF = (await import('jspdf')).default;
+    let jsPDF: any;
+    try {
+      jsPDF = (await import('jspdf')).default;
+    } catch (importError: any) {
+      console.error('Error importing jsPDF:', importError);
+      console.error('Import error stack:', importError?.stack);
+      return null;
+    }
+    
     const doc = new jsPDF();
     
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -524,10 +532,20 @@ async function generateAllCreditsPDF(customers: any[], credits: any[]): Promise<
     }
 
     // Generate PDF as buffer
-    const pdfArrayBuffer = doc.output('arraybuffer');
+    let pdfArrayBuffer: ArrayBuffer;
+    try {
+      pdfArrayBuffer = doc.output('arraybuffer');
+    } catch (outputError: any) {
+      console.error('Error outputting PDF:', outputError);
+      console.error('Output error stack:', outputError?.stack);
+      return null;
+    }
+    
     return Buffer.from(pdfArrayBuffer);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating PDF:', error);
+    console.error('PDF generation error stack:', error?.stack);
+    console.error('Error message:', error?.message);
     return null;
   }
 }
@@ -721,16 +739,20 @@ export default async function handler(req: any, res: any) {
       }
 
       // Generate PDF
+      console.log('Starting PDF generation for', allCreditsData.credits.length, 'credits');
       const pdfBuffer = await generateAllCreditsPDF(allCreditsData.customers, allCreditsData.credits);
       
       if (!pdfBuffer) {
+        console.error('PDF generation failed - returned null');
         await sendTelegramMessage(
           message.chat.id,
-          '❌ Error generating PDF. Please try again later.',
+          '❌ Error generating PDF. Please check server logs for details.',
           message.message_id
         );
         return res.status(200).json({ ok: true });
       }
+      
+      console.log('PDF generated successfully, size:', pdfBuffer.length, 'bytes');
 
       // Send PDF
       const fileName = `all_credits_${new Date().toISOString().split('T')[0]}.pdf`;

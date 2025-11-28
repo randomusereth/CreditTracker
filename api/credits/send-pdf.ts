@@ -77,9 +77,11 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Generate PDF (reuse the function from webhook)
-    const jsPDF = (await import('jspdf')).default;
-    const doc = new jsPDF();
+    // Generate PDF
+    let pdfBuffer: Buffer;
+    try {
+      const jsPDF = (await import('jspdf')).default;
+      const doc = new jsPDF();
     
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -215,62 +217,87 @@ export default async function handler(req: any, res: any) {
       );
     }
 
-    const pdfArrayBuffer = doc.output('arraybuffer');
-    const pdfBuffer = Buffer.from(pdfArrayBuffer);
-
-    // Send PDF via Telegram
-    const chatId = parseInt(telegramUserId);
-    const fileName = `all_credits_${new Date().toISOString().split('T')[0]}.pdf`;
-    const caption = `📊 *All Credits Report*\n\nGenerated on: ${new Date().toLocaleDateString()}\n\nTotal Credits: ${credits.length}`;
-
-    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
-    const parts: Buffer[] = [];
-    
-    parts.push(Buffer.from(`--${boundary}\r\n`));
-    parts.push(Buffer.from(`Content-Disposition: form-data; name="chat_id"\r\n\r\n`));
-    parts.push(Buffer.from(chatId.toString()));
-    parts.push(Buffer.from(`\r\n`));
-    
-    parts.push(Buffer.from(`--${boundary}\r\n`));
-    parts.push(Buffer.from(`Content-Disposition: form-data; name="document"; filename="${fileName}"\r\n`));
-    parts.push(Buffer.from(`Content-Type: application/pdf\r\n\r\n`));
-    parts.push(pdfBuffer);
-    parts.push(Buffer.from(`\r\n`));
-    
-    parts.push(Buffer.from(`--${boundary}\r\n`));
-    parts.push(Buffer.from(`Content-Disposition: form-data; name="caption"\r\n\r\n`));
-    parts.push(Buffer.from(caption));
-    parts.push(Buffer.from(`\r\n`));
-    
-    parts.push(Buffer.from(`--${boundary}--\r\n`));
-    
-    const body = Buffer.concat(parts);
-    
-    const url = `${TELEGRAM_API_URL}${BOT_TOKEN}/sendDocument`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'Content-Length': body.length.toString(),
-      },
-      body: body,
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Error sending PDF via Telegram:', error);
-      return res.status(500).json({ error: 'Failed to send PDF via Telegram' });
+      const pdfArrayBuffer = doc.output('arraybuffer');
+      pdfBuffer = Buffer.from(pdfArrayBuffer);
+    } catch (pdfError: any) {
+      console.error('Error generating PDF:', pdfError);
+      console.error('PDF Error stack:', pdfError?.stack);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Error generating PDF',
+        message: pdfError?.message || 'Failed to generate PDF document'
+      });
     }
 
-    return res.status(200).json({ 
-      success: true,
-      message: 'PDF sent successfully to your Telegram chat' 
-    });
+    // Send PDF via Telegram
+    try {
+      const chatId = parseInt(telegramUserId);
+      const fileName = `all_credits_${new Date().toISOString().split('T')[0]}.pdf`;
+      const caption = `📊 *All Credits Report*\n\nGenerated on: ${new Date().toLocaleDateString()}\n\nTotal Credits: ${credits.length}`;
+
+      const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+      const parts: Buffer[] = [];
+      
+      parts.push(Buffer.from(`--${boundary}\r\n`));
+      parts.push(Buffer.from(`Content-Disposition: form-data; name="chat_id"\r\n\r\n`));
+      parts.push(Buffer.from(chatId.toString()));
+      parts.push(Buffer.from(`\r\n`));
+      
+      parts.push(Buffer.from(`--${boundary}\r\n`));
+      parts.push(Buffer.from(`Content-Disposition: form-data; name="document"; filename="${fileName}"\r\n`));
+      parts.push(Buffer.from(`Content-Type: application/pdf\r\n\r\n`));
+      parts.push(pdfBuffer);
+      parts.push(Buffer.from(`\r\n`));
+      
+      parts.push(Buffer.from(`--${boundary}\r\n`));
+      parts.push(Buffer.from(`Content-Disposition: form-data; name="caption"\r\n\r\n`));
+      parts.push(Buffer.from(caption));
+      parts.push(Buffer.from(`\r\n`));
+      
+      parts.push(Buffer.from(`--${boundary}--\r\n`));
+      
+      const body = Buffer.concat(parts);
+      
+      const url = `${TELEGRAM_API_URL}${BOT_TOKEN}/sendDocument`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+          'Content-Length': body.length.toString(),
+        },
+        body: body,
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Error sending PDF via Telegram:', error);
+        return res.status(500).json({ 
+          success: false,
+          error: 'Failed to send PDF via Telegram',
+          message: error
+        });
+      }
+
+      return res.status(200).json({ 
+        success: true,
+        message: 'PDF sent successfully to your Telegram chat' 
+      });
+    } catch (telegramError: any) {
+      console.error('Error sending PDF via Telegram:', telegramError);
+      console.error('Telegram Error stack:', telegramError?.stack);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Failed to send PDF via Telegram',
+        message: telegramError?.message || 'Unknown error'
+      });
+    }
   } catch (error: any) {
     console.error('Error in send-pdf endpoint:', error);
+    console.error('Error stack:', error?.stack);
     return res.status(500).json({ 
+      success: false,
       error: 'Internal server error',
-      message: error?.message 
+      message: error?.message || 'Unknown error occurred'
     });
   }
 }
