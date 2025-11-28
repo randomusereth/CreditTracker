@@ -290,11 +290,11 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
 
   let message = '*ጠቅላላ የብድር ታሪክ*\n';
   
-  message += `የብድር ብዛት: ${credits.length}\n`;
-  message += `ጠቅላላ የብድር መጠን: ${formatNumberWithCommas(totalCreditsAmount)} ብር\n`;
-  message += `ጠቅላላ የተከፈለ: ${formatNumberWithCommas(totalPaidAmount)} ብር\n`;
-  message += `ቀሪ የሚከፈል: ${formatNumberWithCommas(totalRemainingAmount)} ብር\n\n`;
-  message += '───────────────────────────\n\n';
+  message += `**የብድር ብዛት**: ${credits.length}\n`;
+  message += `**ጠቅላላ የብድር መጠን**: ${formatNumberWithCommas(totalCreditsAmount)} ብር\n`;
+  message += `**ጠቅላላ የተከፈለ**: ${formatNumberWithCommas(totalPaidAmount)} ብር\n`;
+  message += `**ቀሪ የሚከፈል**: ${formatNumberWithCommas(totalRemainingAmount)} ብር\n\n`;
+  message += '───────────────────\n\n';
 
   // Sort customers by name for consistent ordering
   const sortedCustomerIds = Array.from(creditsByCustomer.keys()).sort((a, b) => {
@@ -327,15 +327,15 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
 
     // Customer header
     message += `👤 *${customer.name}*\n`;
-    message += `ስልክ ቁጥር: ${customer.phone}\n`;
-    message += `የብድር ብዛት: ${customerCredits.length} | ጠቅላላ የብድር መጠን: ${formatNumberWithCommas(customerTotal)} ብር | የተከፈለ: ${formatNumberWithCommas(customerPaid)} ብር | ቀሪ: ${formatNumberWithCommas(customerRemaining)} ብር\n\n`;
+    message += `**ስልክ ቁጥር**: ${customer.phone}\n`;
+    message += `**የብድር ብዛት**: ${customerCredits.length} | **ጠቅላላ የብድር መጠን**: ${formatNumberWithCommas(customerTotal)} ብር | **የተከፈለ**: ${formatNumberWithCommas(customerPaid)} ብር | **ቀሪ**: ${formatNumberWithCommas(customerRemaining)} ብር\n\n`;
 
     // List credits for this customer
     customerCredits.forEach((credit, creditIndex) => {
       const item = credit.item || '-';
       const total = typeof credit.total_amount === 'number' ? credit.total_amount : parseFloat(credit.total_amount.toString());
     
-      const status = credit.status === 'paid' ? 'ተከፍሏል ✅' : credit.status === 'partially-paid' ? 'በከፊል ተከፍሏል 🔵' : 'አልተከፈለም ❌';
+      const status = credit.status === 'paid' ? '**ተከፍሏል ✅**' : credit.status === 'partially-paid' ? '**በከፊል ተከፍሏል 🔵**' : '**አልተከፈለም ❌**';
       const date = credit.date ? new Date(credit.date).toLocaleDateString() : '-';
 
       message += `${creditIndex + 1}. ${item}\n`;
@@ -351,7 +351,7 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
 
     // Separator line between customers (except last one)
     if (index < sortedCustomerIds.length - 1) {
-      message += '───────────────────────────\n\n';
+      message += '───────────────────\n\n';
     }
   });
 
@@ -364,11 +364,11 @@ function formatAllCreditsMessage(customers: any[], credits: any[]): string {
 function formatCreditMessage(info: CustomerCreditInfo): string {
   const { customerName, totalCredits, totalPaid, totalOutstanding, unpaidCount, partiallyPaidCount } = info;
 
-  let message = `📊 *Credit Information*\n\n`;
-  message += `👤 *ደንበኛ:* ${customerName}\n\n`;
-  message += `💰 *ጠቅላላ የብድር መጠን:* ${formatNumberWithCommas(totalCredits)} ETB\n`;
-  message += `✅ *እስካሁን የተከፈለ:* ${formatNumberWithCommas(totalPaid)} ETB\n`;
-  message += `⚠️ *ቀሪ:* ${formatNumberWithCommas(totalOutstanding)} ETB\n\n`;
+  
+  let message = `👤 *ደንበኛ:* ${customerName}\n\n`;
+  message += ` *ጠቅላላ የብድር መጠን:* ${formatNumberWithCommas(totalCredits)} ብር\n`;
+  message += ` *እስካሁን የተከፈለ:* ${formatNumberWithCommas(totalPaid)} ብር\n`;
+  message += ` *ቀሪ:* ${formatNumberWithCommas(totalOutstanding)} ብር\n\n`;
 
   if (unpaidCount > 0 || partiallyPaidCount > 0) {
     if (unpaidCount > 0) {
