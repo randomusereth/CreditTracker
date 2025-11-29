@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, createContext, useContext } from 'react';
-import { CreditCard, Settings, Home, Users, FileText, UserCog, Plus, LogOut, User as UserIcon, Wallet, Store } from 'lucide-react';
+import { CreditCard, Settings, Home, Users, UserCog, Plus, LogOut, User as UserIcon, Wallet, Store } from 'lucide-react';
 import { Dashboard } from './components/Dashboard';
 import { Customers } from './components/Customers';
 import AddCustomer from './components/AddCustomer';
@@ -950,16 +950,6 @@ function App() {
               >
                 <CreditCard className="w-5 h-5" />
                 <span className="text-xs">Credits</span>
-              </button>
-              <button
-                onClick={() => navigateTo('reports')}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentView === 'reports'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400'
-                  }`}
-              >
-                <FileText className="w-5 h-5" />
-                <span className="text-xs">Reports</span>
               </button>
               {/* Staff button - hidden for now, uncomment to show */}
               {/* <button
