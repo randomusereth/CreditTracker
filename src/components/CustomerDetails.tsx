@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Customer, Credit, AppSettings, PaymentRecord } from '../App';
-import { ArrowLeft, Phone, MessageSquare, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet, Minus } from 'lucide-react';
+import { ArrowLeft, Phone, MessageSquare, Download, Plus, Edit2, Trash2, X, Save, DollarSign, Wallet, Minus } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { PaymentHistoryView } from './PaymentHistoryView';
@@ -151,22 +151,12 @@ export function CustomerDetails({
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
 
   const [activeTab, setActiveTab] = useState<'unpaid' | 'paid'>('unpaid');
-  const [showFilters, setShowFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid' | 'partially-paid'>('all');
-  const [amountFilter, setAmountFilter] = useState<'none' | 'gt' | 'lt' | 'range'>('none');
-  const [amountValue, setAmountValue] = useState('');
-  const [amountFrom, setAmountFrom] = useState('');
-  const [amountTo, setAmountTo] = useState('');
-  const [dateFilterType, setDateFilterType] = useState<'single' | 'range'>('single');
-  const [singleDate, setSingleDate] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({ name: customer.name, phone: customer.phone });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'customer' | 'credit'; id: string; name?: string }>({ isOpen: false, type: 'credit', id: '' });
 
-  // First filter by tab (unpaid or paid)
-  const tabFilteredCredits = credits.filter((credit) => {
+  // Filter by tab (unpaid or paid)
+  const filteredCredits = credits.filter((credit) => {
     if (activeTab === 'unpaid') {
       // Show unpaid and partially-paid credits (remainingAmount > 0)
       return credit.remainingAmount > 0;
@@ -176,46 +166,9 @@ export function CustomerDetails({
     }
   });
 
-  // Then apply other filters
-  const filteredCredits = tabFilteredCredits.filter((credit) => {
-    if (statusFilter !== 'all' && credit.status !== statusFilter) return false;
-    if (amountFilter !== 'none') {
-      if (amountFilter === 'gt' && amountValue && credit.totalAmount <= parseFloat(amountValue)) return false;
-      if (amountFilter === 'lt' && amountValue && credit.totalAmount >= parseFloat(amountValue)) return false;
-      if (amountFilter === 'range' && amountFrom && amountTo) {
-        const amount = credit.totalAmount;
-        if (amount < parseFloat(amountFrom) || amount > parseFloat(amountTo)) return false;
-      }
-    }
-    if (dateFilterType === 'single' && singleDate) {
-      const creditDate = new Date(credit.date);
-      const filterDate = new Date(singleDate);
-      // Check if same day
-      if (creditDate.toDateString() !== filterDate.toDateString()) return false;
-    } else if (dateFilterType === 'range' && (startDate || endDate)) {
-      const creditDate = new Date(credit.date);
-      if (startDate && new Date(startDate) > creditDate) return false;
-      if (endDate && new Date(endDate) < creditDate) return false;
-    }
-    return true;
-  });
-
   const totalCredits = filteredCredits.reduce((sum, c) => sum + c.totalAmount, 0);
   const totalPaid = filteredCredits.reduce((sum, c) => sum + c.paidAmount, 0);
   const totalUnpaid = filteredCredits.reduce((sum, c) => sum + c.remainingAmount, 0);
-
-  const clearFilters = () => {
-    setStatusFilter('all');
-    setAmountFilter('none');
-    setAmountValue('');
-    setAmountFrom('');
-    setAmountTo('');
-    setSingleDate('');
-    setStartDate('');
-    setEndDate('');
-  };
-
-  const hasActiveFilters = statusFilter !== 'all' || amountFilter !== 'none' || singleDate || (dateFilterType === 'range' && (startDate || endDate));
 
 
   const handleExportPDF = () => {
@@ -432,20 +385,11 @@ export function CustomerDetails({
         </div>
       </div>
 
-      {/* Credit History with Filters */}
+      {/* Credit History */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <h2 className="text-gray-900 dark:text-white">{t('creditHistory')}</h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="hidden inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Filter className="w-4 h-4" />
-                {t('filters')}
-              </button>
-            </div>
           </div>
 
           {/* Tabs */}
@@ -453,8 +397,8 @@ export function CustomerDetails({
             <button
               onClick={() => setActiveTab('unpaid')}
               className={`w-full px-4 py-2 font-medium transition-colors rounded-lg ${activeTab === 'unpaid'
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
             >
               {t('unpaidTab')}
@@ -462,109 +406,14 @@ export function CustomerDetails({
             <button
               onClick={() => setActiveTab('paid')}
               className={`w-full px-4 py-2 font-medium transition-colors rounded-lg ${activeTab === 'paid'
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
             >
               {t('paidTab')}
             </button>
           </div>
 
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('filterByStatus')}</label>
-                <div className="flex gap-2 flex-wrap">
-                  {['all', 'paid', 'partially-paid', 'unpaid'].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setStatusFilter(status as any)}
-                      className={`px-3 py-1 rounded-lg text-sm ${statusFilter === status
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                        }`}
-                    >
-                      {t(status === 'partially-paid' ? 'partiallyPaid' : status)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('filterByAmount')}</label>
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => setAmountFilter('none')} className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'none' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>{t('all')}</button>
-                    <button onClick={() => setAmountFilter('gt')} className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'gt' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>{t('greaterThan')}</button>
-                    <button onClick={() => setAmountFilter('lt')} className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'lt' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>{t('lessThan')}</button>
-                    <button onClick={() => setAmountFilter('range')} className={`px-3 py-1 rounded-lg text-sm ${amountFilter === 'range' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>{t('range')}</button>
-                  </div>
-                  {(amountFilter === 'gt' || amountFilter === 'lt') && <input type="number" placeholder="Enter amount" value={amountValue} onChange={(e) => setAmountValue(e.target.value)} step="0.01" min="0" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" />}
-                  {amountFilter === 'range' && <div className="grid grid-cols-2 gap-3"><input type="number" placeholder={t('from')} value={amountFrom} onChange={(e) => setAmountFrom(e.target.value)} step="0.01" min="0" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /><input type="number" placeholder={t('to')} value={amountTo} onChange={(e) => setAmountTo(e.target.value)} step="0.01" min="0" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /></div>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('filterByDate')}</label>
-                <div className="mb-3">
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setDateFilterType('single')}
-                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'single'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                        }`}
-                    >
-                      Single Day
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDateFilterType('range')}
-                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${dateFilterType === 'range'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                        }`}
-                    >
-                      Date Range
-                    </button>
-                  </div>
-                </div>
-                {dateFilterType === 'single' ? (
-                  <input
-                    type="date"
-                    value={singleDate}
-                    onChange={(e) => setSingleDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('startDate')}</label>
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('endDate')}</label>
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {hasActiveFilters && <button onClick={clearFilters} className="inline-flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><X className="w-4 h-4" />{t('clearFilters')}</button>}
-            </div>
-          )}
         </div>
 
         <div className="overflow-x-auto">
