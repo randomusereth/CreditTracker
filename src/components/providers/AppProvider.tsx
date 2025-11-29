@@ -29,6 +29,7 @@ const initialState: AppState = {
 type AppContextType = {
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  updateSettings: (settings: Partial<AppSettings>) => void;
   isLoading: boolean;
   user: User | null;
   logout: () => void;
@@ -100,6 +101,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [appState.settings.theme]);
 
+  // Update settings helper function
+  const updateSettings = (settings: Partial<AppSettings>) => {
+    setAppState(prev => ({
+      ...prev,
+      settings: { ...prev.settings, ...settings },
+    }));
+  };
+
   // Logout function
   const logout = () => {
     clearCurrentUser();
@@ -121,7 +130,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AppContext.Provider value={{ appState, setAppState, isLoading, user, logout }}>
+    <AppContext.Provider value={{ appState, setAppState, updateSettings, isLoading, user, logout }}>
       {children}
     </AppContext.Provider>
   );

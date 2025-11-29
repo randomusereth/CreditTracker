@@ -3,6 +3,7 @@
 import { Home, Users, CreditCard, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMemo } from 'react';
 import { useApp } from '@/components/providers/AppProvider';
 
 const translations: Record<string, Record<string, string>> = {
@@ -29,15 +30,14 @@ export function BottomNav() {
 
   // Extract language value to ensure React tracks it as a dependency
   // This ensures the component re-renders when language changes
-  const language = appState?.settings?.language || 'en';
+  const language = useMemo(() => appState?.settings?.language || 'en', [appState?.settings?.language]);
 
   // Create translation function - this will use the current language value
-  const t = (key: string) => {
-    return translations[language]?.[key] || translations['en'][key] || key;
-  };
-
-  // Force re-render by using language in the component key or ensuring it's tracked
-  // The language variable is now a primitive value that React can track
+  const t = useMemo(() => {
+    return (key: string) => {
+      return translations[language]?.[key] || translations['en'][key] || key;
+    };
+  }, [language]);
 
   const isActive = (path: string) => {
     if (path === '/') {
