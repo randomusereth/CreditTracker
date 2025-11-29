@@ -790,6 +790,12 @@ function App() {
             credits={appState.credits}
             onAddCredit={() => navigateTo('add-credit')}
             onViewCustomer={(id) => navigateTo('customer-details', id)}
+            onEditCredit={(creditId) => {
+              const credit = appState.credits.find(c => c.id === creditId);
+              if (credit) {
+                navigateTo('edit-credit', credit.customerId, creditId);
+              }
+            }}
             settings={appState.settings}
             onUpdateCredit={updateCredit}
             onChangeCustomer={changeCustomer}
@@ -997,24 +1003,24 @@ function App() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Top Navigation - Hidden on bulk payment, add-credit, edit-credit, record-payment pages */}
         {!['bulk-payment', 'add-credit', 'edit-credit', 'record-payment'].includes(currentView) && (
-        <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center gap-2">
-                <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                <h1 className="text-gray-900 dark:text-white text-lg font-semibold">Dube Tracker</h1>
-              </div>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => navigateTo('settings')}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
+          <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <h1 className="text-gray-900 dark:text-white text-lg font-semibold">Dube Tracker</h1>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => navigateTo('settings')}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </nav>
+          </nav>
         )}
 
         {/* Main Content */}
