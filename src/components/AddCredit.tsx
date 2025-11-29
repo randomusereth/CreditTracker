@@ -5,6 +5,67 @@ import { AppSettings } from '../types';
 import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
 import { validateEthiopianPhone } from '../utils/phoneValidation';
 
+const translations: Record<string, Record<string, string>> = {
+  en: {
+    addNewCredit: 'Add New Credit',
+    recordCreditTransaction: 'Record a credit transaction',
+    selectCustomer: 'Select Customer *',
+    chooseCustomer: 'Choose a customer',
+    addNewCustomer: 'Add New Customer',
+    itemProductSold: 'Item/Product Sold *',
+    itemPlaceholder: 'e.g., Rice 50kg, Electronics',
+    totalAmount: 'Total Amount (ETB) *',
+    amountPaid: 'Amount Paid (ETB)',
+    amountPaidDescription: 'Enter the amount already paid by the customer',
+    remarksNotes: 'Remarks/Notes (Optional)',
+    remarksPlaceholder: 'Add any additional notes...',
+    summary: 'Summary',
+    totalAmountLabel: 'Total Amount:',
+    paidAmountLabel: 'Paid Amount:',
+    remaining: 'Remaining:',
+    cancel: 'Cancel',
+    addCredit: 'Add Credit',
+    customerName: 'Customer Name *',
+    phoneNumber: 'Phone Number *',
+    enterCustomerName: 'Enter customer name',
+    phonePlaceholder: '+251912345678 or 0912345678',
+    phoneValidationMessage: 'Only Ethiopian phone numbers allowed (+251 or 0...)',
+    fillAllFields: 'Please fill in all required fields',
+    validAmount: 'Please enter a valid amount',
+    fillCustomerFields: 'Please fill in the customer name and phone number',
+    invalidPhone: 'Invalid phone number',
+  },
+  am: {
+    addNewCredit: 'አዲስ ብድር ጨምር',
+    recordCreditTransaction: 'የብድር ግብይት ዝግጅት',
+    selectCustomer: 'ደንበኛ ይምረጡ *',
+    chooseCustomer: 'ደንበኛ ይምረጡ',
+    addNewCustomer: 'አዲስ ደንበኛ ጨምር',
+    itemProductSold: 'የተሸጠ እቃ/ምርት *',
+    itemPlaceholder: 'ለምሳሌ: ሩዝ 50 ኪሎግራም, ኤሌክትሮኒክስ',
+    totalAmount: 'ጠቅላላ መጠን (ብር) *',
+    amountPaid: 'የተከፈለ መጠን (ብር)',
+    amountPaidDescription: 'ደንበኛው እስካሁን የከፈለውን መጠን ያስገቡ',
+    remarksNotes: 'ማስታወሻ (አማራጭ)',
+    remarksPlaceholder: 'ተጨማሪ ማስታወሻ ያክሉ...',
+    summary: 'ማጠቃለያ',
+    totalAmountLabel: 'ጠቅላላ መጠን:',
+    paidAmountLabel: 'የተከፈለ መጠን:',
+    remaining: 'ቀሪ:',
+    cancel: 'ሰርዝ',
+    addCredit: 'ብድር ጨምር',
+    customerName: 'የደንበኛ ስም *',
+    phoneNumber: 'ስልክ ቁጥር *',
+    enterCustomerName: 'የደንበኛ ስም ያስገቡ',
+    phonePlaceholder: '+251912345678 ወይም 0912345678',
+    phoneValidationMessage: 'የኢትዮጵያ ስልክ ቁጥሮች ብቻ ይፈቀዳሉ (+251 ወይም 0...)',
+    fillAllFields: 'እባክዎ ሁሉንም የሚጠይቁ መስኮች ይሙሉ',
+    validAmount: 'እባክዎ ትክክለኛ መጠን ያስገቡ',
+    fillCustomerFields: 'እባክዎ የደንበኛ ስም እና ስልክ ቁጥር ይሙሉ',
+    invalidPhone: 'ትክክለኛ ያልሆነ ስልክ ቁጥር',
+  },
+};
+
 type AddCreditProps = {
   customers: Customer[];
   preselectedCustomerId?: string | null;
@@ -15,6 +76,7 @@ type AddCreditProps = {
 };
 
 export default function AddCredit({ customers, preselectedCustomerId, onAddCredit, onCancel, onAddCustomer, settings }: AddCreditProps) {
+  const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
   const [customerId, setCustomerId] = useState(preselectedCustomerId || '');
   const [item, setItem] = useState('');
   const [remarks, setRemarks] = useState('');
@@ -29,13 +91,13 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
     e.preventDefault();
     
     if (!customerId || !item.trim() || !totalAmount) {
-      alert('Please fill in all required fields');
+      alert(t('fillAllFields'));
       return;
     }
 
     const total = parseFormattedNumber(totalAmount);
     if (isNaN(total) || total <= 0) {
-      alert('Please enter a valid amount');
+      alert(t('validAmount'));
       return;
     }
 
@@ -60,14 +122,14 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
 
   const handleAddNewCustomer = () => {
     if (!newCustomerName || !newCustomerPhone) {
-      alert('Please fill in the customer name and phone number');
+      alert(t('fillCustomerFields'));
       return;
     }
 
     // Validate phone number
     const phoneValidation = validateEthiopianPhone(newCustomerPhone);
     if (!phoneValidation.isValid) {
-      setPhoneError(phoneValidation.error || 'Invalid phone number');
+      setPhoneError(phoneValidation.error || t('invalidPhone'));
       return;
     }
 
@@ -109,8 +171,8 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h2 className="text-gray-900 dark:text-white">Add New Credit</h2>
-          <p className="text-gray-600 dark:text-gray-400">Record a credit transaction</p>
+          <h2 className="text-gray-900 dark:text-white">{t('addNewCredit')}</h2>
+          <p className="text-gray-600 dark:text-gray-400">{t('recordCreditTransaction')}</p>
         </div>
       </div>
 
@@ -120,7 +182,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
           {/* Customer Select */}
           <div>
             <label htmlFor="customer" className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-              Select Customer *
+              {t('selectCustomer')}
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -131,7 +193,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                 required
               >
-                <option value="">Choose a customer</option>
+                <option value="">{t('chooseCustomer')}</option>
                 {customers.map(customer => (
                   <option key={customer.id} value={customer.id}>
                     {customer.name} - {customer.phone}
@@ -145,14 +207,14 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
               className="mt-2 inline-flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
             >
               <UserPlus className="w-4 h-4" />
-              Add New Customer
+              {t('addNewCustomer')}
             </button>
           </div>
 
           {/* Item Input */}
           <div>
             <label htmlFor="item" className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-              Item/Product Sold *
+              {t('itemProductSold')}
             </label>
             <div className="relative">
               <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -161,7 +223,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 id="item"
                 value={item}
                 onChange={(e) => setItem(e.target.value)}
-                placeholder="e.g., Rice 50kg, Electronics"
+                placeholder={t('itemPlaceholder')}
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -171,7 +233,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
           {/* Total Amount Input */}
           <div>
             <label htmlFor="totalAmount" className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-              Total Amount (ETB) *
+              {t('totalAmount')}
             </label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -192,7 +254,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
           <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4">
             <label htmlFor="paidAmount" className="block text-sm text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
-              Amount Paid (ETB)
+              {t('amountPaid')}
             </label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -206,13 +268,13 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-blue-300 dark:border-blue-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">Enter the amount already paid by the customer</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">{t('amountPaidDescription')}</p>
           </div>
 
           {/* Remarks Input - Moved to bottom */}
           <div>
             <label htmlFor="remarks" className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-              Remarks/Notes (Optional)
+              {t('remarksNotes')}
             </label>
             <div className="relative">
               <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -220,7 +282,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 id="remarks"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Add any additional notes..."
+                placeholder={t('remarksPlaceholder')}
                 rows={3}
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -231,16 +293,16 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
         {/* Summary */}
         {totalAmount && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h3 className="text-gray-900 dark:text-white mb-2">Summary</h3>
+            <h3 className="text-gray-900 dark:text-white mb-2">{t('summary')}</h3>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('totalAmountLabel')}</span>
                 <span className="text-gray-900 dark:text-white">
                   {formatNumber(parseFormattedNumber(totalAmount || '0'))} {settings.language === 'am' ? 'ብር' : 'ETB'}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Paid Amount:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('paidAmountLabel')}</span>
                 <span className="text-green-600 dark:text-green-400">
                   {(() => {
                     const total = parseFormattedNumber(totalAmount || '0');
@@ -251,7 +313,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 </span>
               </div>
               <div className="flex justify-between pt-2 border-t border-blue-200 dark:border-blue-700">
-                <span className="text-gray-700 dark:text-gray-300">Remaining:</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('remaining')}</span>
                 <span className="text-red-600 dark:text-red-400">
                   {(() => {
                     const total = parseFormattedNumber(totalAmount || '0');
@@ -272,13 +334,13 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
             onClick={onCancel}
             className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             type="submit"
             className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Add Credit
+            {t('addCredit')}
           </button>
         </div>
       </form>
@@ -288,7 +350,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-gray-900 dark:text-white text-lg font-semibold">Add New Customer</h3>
+              <h3 className="text-gray-900 dark:text-white text-lg font-semibold">{t('addNewCustomer')}</h3>
               <button
                 onClick={() => setShowNewCustomerModal(false)}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
@@ -299,7 +361,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
             <div className="space-y-4">
               <div>
                 <label htmlFor="newCustomerName" className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-                  Customer Name *
+                  {t('customerName')}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -308,7 +370,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                     id="newCustomerName"
                     value={newCustomerName}
                     onChange={(e) => setNewCustomerName(e.target.value)}
-                    placeholder="Enter customer name"
+                    placeholder={t('enterCustomerName')}
                     className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -316,7 +378,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
               </div>
               <div>
                 <label htmlFor="newCustomerPhone" className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-                  Phone Number *
+                  {t('phoneNumber')}
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -325,7 +387,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                     id="newCustomerPhone"
                     value={newCustomerPhone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    placeholder="+251912345678 or 0912345678"
+                    placeholder={t('phonePlaceholder')}
                     className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border ${
                       phoneError ? 'border-red-500 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'
                     } rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -339,7 +401,7 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                   </div>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Only Ethiopian phone numbers allowed (+251 or 0...)
+                  {t('phoneValidationMessage')}
                 </p>
               </div>
             </div>
@@ -349,14 +411,14 @@ export default function AddCredit({ customers, preselectedCustomerId, onAddCredi
                 onClick={() => setShowNewCustomerModal(false)}
                 className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleAddNewCustomer}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Add Customer
+                {t('addNewCustomer')}
               </button>
             </div>
           </div>

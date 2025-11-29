@@ -794,6 +794,7 @@ function App() {
               navigateTo('customers');
             }}
             onCancel={() => navigateTo('customers')}
+            settings={appState.settings}
           />
         );
       case 'customer-details':

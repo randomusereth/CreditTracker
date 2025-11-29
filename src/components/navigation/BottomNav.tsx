@@ -4,6 +4,7 @@ import { Home, Users, CreditCard, FileText, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/components/providers/AppProvider';
+import { useMemo } from 'react';
 
 const translations: Record<string, Record<string, string>> = {
   en: {
@@ -25,9 +26,9 @@ const translations: Record<string, Record<string, string>> = {
 export function BottomNav() {
   const pathname = usePathname();
   const { user, appState } = useApp();
-  
-  // Get current language to ensure component re-renders when language changes
-  const currentLanguage = appState.settings.language;
+
+  // Use useMemo to ensure component re-renders when language changes
+  const currentLanguage = useMemo(() => appState.settings.language, [appState.settings.language]);
   const t = (key: string) => translations[currentLanguage]?.[key] || translations['en'][key];
 
   // Don't show navigation on onboarding page or if not authenticated
@@ -47,8 +48,8 @@ export function BottomNav() {
           <Link
             href="/"
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${isActive('/')
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400'
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 dark:text-gray-400'
               }`}
           >
             <Home className="w-5 h-5" />
@@ -57,8 +58,8 @@ export function BottomNav() {
           <Link
             href="/customers"
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${isActive('/customers')
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400'
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 dark:text-gray-400'
               }`}
           >
             <Users className="w-5 h-5" />
@@ -67,8 +68,8 @@ export function BottomNav() {
           <Link
             href="/credits"
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${isActive('/credits')
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400'
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 dark:text-gray-400'
               }`}
           >
             <CreditCard className="w-5 h-5" />
@@ -77,8 +78,8 @@ export function BottomNav() {
           <Link
             href="/reports"
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${isActive('/reports')
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400'
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 dark:text-gray-400'
               }`}
           >
             <FileText className="w-5 h-5" />
@@ -87,8 +88,8 @@ export function BottomNav() {
           <Link
             href="/staff"
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${isActive('/staff')
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400'
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 dark:text-gray-400'
               }`}
           >
             <UserCog className="w-5 h-5" />
