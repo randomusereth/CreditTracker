@@ -58,7 +58,7 @@ export function BottomNav() {
               }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-xs">{t('home')}</span>
+            <span className="text-xs">መነሻ</span>
           </Link>
           <Link
             href="/customers"
@@ -68,7 +68,7 @@ export function BottomNav() {
               }`}
           >
             <Users className="w-5 h-5" />
-            <span className="text-xs">{t('customers')}</span>
+            <span className="text-xs">ደንበኞች</span>
           </Link>
           <Link
             href="/credits"
@@ -78,7 +78,7 @@ export function BottomNav() {
               }`}
           >
             <CreditCard className="w-5 h-5" />
-            <span className="text-xs">{t('credits')}</span>
+            <span className="text-xs">ብድሮች</span>
           </Link>
           <Link
             href="/staff"
