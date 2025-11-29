@@ -14,6 +14,7 @@ interface CustomerDetailsProps {
   credits: Credit[];
   onBack: () => void;
   onAddCredit: () => void;
+  onBulkPayment?: () => void;
   settings: AppSettings;
   onUpdateCustomer: (customer: Customer) => void;
   onDeleteCustomer: (id: string) => void;
@@ -131,6 +132,7 @@ export function CustomerDetails({
   credits,
   onBack,
   onAddCredit,
+  onBulkPayment,
   settings,
   onUpdateCustomer,
   onDeleteCustomer,
@@ -417,8 +419,9 @@ export function CustomerDetails({
           </button>
           <button
             onClick={() => {
-              // Navigate to bulk payment page with customer ID
-              window.location.href = `/bulk-payment?customerId=${customer.id}`;
+              if (onBulkPayment) {
+                onBulkPayment();
+              }
             }}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >

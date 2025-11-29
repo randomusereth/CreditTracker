@@ -16,6 +16,7 @@ import SettingsPage from './components/SettingsPage';
 import { ShopProfile } from './components/ShopProfile';
 import { StaffManagement } from './components/StaffManagement';
 import { AllCredits } from './components/AllCredits';
+import { BulkPayment } from './components/BulkPayment';
 import { Customer, Credit, ShopInfo, Staff, AppSettings, AppState } from './types';
 import { User } from './types/auth';
 import { getCurrentUser, saveCurrentUser, clearCurrentUser, createUserWithPassword, authenticateUser, userExists, validatePIN, getTelegramUserId } from './lib/auth';
@@ -497,7 +498,7 @@ function App() {
     settings: initialSettings,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'add-customer' | 'customer-details' | 'add-credit' | 'all-credits' | 'reports' | 'settings' | 'shop-profile' | 'staff'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'add-customer' | 'customer-details' | 'add-credit' | 'all-credits' | 'reports' | 'settings' | 'shop-profile' | 'staff' | 'bulk-payment'>('dashboard');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [pendingCustomerId, setPendingCustomerId] = useState<string | null>(null);
 
@@ -804,6 +805,7 @@ function App() {
             credits={appState.credits.filter(c => c.customerId === selectedCustomerId)}
             onBack={() => navigateTo('customers')}
             onAddCredit={() => navigateTo('add-credit', selectedCustomerId)}
+            onBulkPayment={() => navigateTo('bulk-payment', selectedCustomerId)}
             settings={appState.settings}
             onUpdateCustomer={updateCustomer}
             onDeleteCustomer={deleteCustomer}
@@ -882,6 +884,66 @@ function App() {
             onAddStaff={addStaff}
             onUpdateStaff={updateStaff}
             onDeleteStaff={deleteStaff}
+          />
+        );
+      case 'bulk-payment':
+        const bulkPaymentCredits = selectedCustomerId
+          ? appState.credits.filter(c => c.customerId === selectedCustomerId && (c.status === 'unpaid' || c.status === 'partially-paid'))
+          : appState.credits.filter(c => c.status === 'unpaid' || c.status === 'partially-paid');
+        
+        return (
+          <BulkPayment
+            credits={bulkPaymentCredits}
+            onApplyPayment={(creditUpdates) => {
+              // Update credits
+              setAppState(prev => {
+                const updatedCredits = prev.credits.map(credit => {
+                  const update = creditUpdates.find(u => u.creditId === credit.id);
+                  if (update && update.paymentAmount > 0) {
+                    const newPaymentRecord = {
+                      id: Date.now().toString() + Math.random(),
+                      amount: update.paymentAmount,
+                      date: new Date().toISOString(),
+                      remainingAfterPayment: credit.totalAmount - update.newPaidAmount,
+                      note: '',
+                    };
+
+                    return {
+                      ...credit,
+                      paidAmount: update.newPaidAmount,
+                      remainingAmount: credit.totalAmount - update.newPaidAmount,
+                      status: update.newPaidAmount >= credit.totalAmount
+                        ? 'paid' as const
+                        : update.newPaidAmount > 0
+                          ? 'partially-paid' as const
+                          : 'unpaid' as const,
+                      paymentHistory: [...credit.paymentHistory, newPaymentRecord],
+                    };
+                  }
+                  return credit;
+                });
+
+                return {
+                  ...prev,
+                  credits: updatedCredits,
+                };
+              });
+              
+              // Navigate back
+              if (selectedCustomerId) {
+                navigateTo('customer-details', selectedCustomerId);
+              } else {
+                navigateTo('dashboard');
+              }
+            }}
+            onClose={() => {
+              if (selectedCustomerId) {
+                navigateTo('customer-details', selectedCustomerId);
+              } else {
+                navigateTo('dashboard');
+              }
+            }}
+            settings={appState.settings}
           />
         );
       default:
