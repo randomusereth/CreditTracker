@@ -440,7 +440,7 @@ export function CustomerDetails({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="hidden inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 {t('filters')}
@@ -449,24 +449,22 @@ export function CustomerDetails({
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-4">
+          <div className="grid grid-cols-2 gap-2 mb-4">
             <button
               onClick={() => setActiveTab('unpaid')}
-              className={`px-4 py-2 font-medium transition-colors rounded-lg ${
-                activeTab === 'unpaid'
+              className={`w-full px-4 py-2 font-medium transition-colors rounded-lg ${activeTab === 'unpaid'
                   ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
+                }`}
             >
               {t('unpaidTab')}
             </button>
             <button
               onClick={() => setActiveTab('paid')}
-              className={`px-4 py-2 font-medium transition-colors rounded-lg ${
-                activeTab === 'paid'
+              className={`w-full px-4 py-2 font-medium transition-colors rounded-lg ${activeTab === 'paid'
                   ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
+                }`}
             >
               {t('paidTab')}
             </button>
