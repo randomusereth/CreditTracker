@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, DollarSign, Save, AlertCircle } from 'lucide-react';
 import { Credit, AppSettings, PaymentRecord } from '../types';
 import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
@@ -45,6 +45,11 @@ export function RecordPayment({
 }: RecordPaymentProps) {
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
   const [paymentAmount, setPaymentAmount] = useState('');
+
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Calculate total outstanding from unpaid and partially-paid credits
   const totalOutstanding = credit.remainingAmount;

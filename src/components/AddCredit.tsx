@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, User, Package, FileText, DollarSign, Percent, UserPlus, AlertCircle, Phone, X } from 'lucide-react';
 import { Customer, Credit } from '../App';
 import { AppSettings } from '../types';
@@ -77,6 +77,11 @@ type AddCreditProps = {
 
 export default function AddCredit({ customers, preselectedCustomerId, onAddCredit, onCancel, onAddCustomer, settings }: AddCreditProps) {
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
+
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const [customerId, setCustomerId] = useState(preselectedCustomerId || '');
   const [item, setItem] = useState('');
   const [remarks, setRemarks] = useState('');

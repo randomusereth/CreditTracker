@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, User, Phone, DollarSign, FileText, Package, Save, ChevronDown } from 'lucide-react';
 import { Credit, Customer, AppSettings } from '../types';
 import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
@@ -73,7 +73,10 @@ export function EditCredit({
     paidAmount: formatNumber(credit.paidAmount),
   });
 
-  // Removed auto-focus to prevent scrolling and keyboard opening
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const selectedCustomer = allCustomers.find(c => c.id === selectedCustomerId) || customer;
 
