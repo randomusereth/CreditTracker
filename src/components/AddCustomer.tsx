@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, User, Phone, AlertCircle } from 'lucide-react';
 import { Customer } from '../App';
 import { AppSettings } from '../types';
@@ -40,6 +41,7 @@ type AddCustomerProps = {
 };
 
 export default function AddCustomer({ onAddCustomer, onCancel, settings }: AddCustomerProps) {
+  const router = useRouter();
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -81,7 +83,10 @@ export default function AddCustomer({ onAddCustomer, onCancel, settings }: AddCu
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={onCancel}
+          onClick={() => {
+            // Go back to customers page
+            router.push('/customers');
+          }}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -149,7 +154,10 @@ export default function AddCustomer({ onAddCustomer, onCancel, settings }: AddCu
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={() => {
+              // Go back to customers page
+              router.push('/customers');
+            }}
             className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             {t('cancel')}
