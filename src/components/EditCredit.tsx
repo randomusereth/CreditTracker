@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, User, Phone, DollarSign, FileText, Package, Save, ChevronDown } from 'lucide-react';
 import { Credit, Customer, AppSettings } from '../types';
 import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
@@ -63,7 +63,6 @@ export function EditCredit({
   settings,
 }: EditCreditProps) {
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
-  const paidAmountRef = useRef<HTMLInputElement>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState(customer.id);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [customerSearchTerm, setCustomerSearchTerm] = useState('');
@@ -74,15 +73,7 @@ export function EditCredit({
     paidAmount: formatNumber(credit.paidAmount),
   });
 
-  // Auto-focus the paid amount field when page loads
-  useEffect(() => {
-    if (paidAmountRef.current) {
-      setTimeout(() => {
-        paidAmountRef.current?.focus();
-        paidAmountRef.current?.select();
-      }, 100);
-    }
-  }, []);
+  // Removed auto-focus to prevent scrolling and keyboard opening
 
   const selectedCustomer = allCustomers.find(c => c.id === selectedCustomerId) || customer;
 
@@ -279,13 +270,12 @@ export function EditCredit({
           <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
             {t('paidAmountLabel')}
           </label>
-          <input
-            ref={paidAmountRef}
-            type="text"
-            value={editForm.paidAmount}
-            onChange={(e) => setEditForm({ ...editForm, paidAmount: formatInputNumber(e.target.value) })}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-          />
+            <input
+              type="text"
+              value={editForm.paidAmount}
+              onChange={(e) => setEditForm({ ...editForm, paidAmount: formatInputNumber(e.target.value) })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+            />
         </div>
 
         {/* Summary */}

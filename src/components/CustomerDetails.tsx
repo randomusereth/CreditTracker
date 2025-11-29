@@ -560,7 +560,11 @@ export function CustomerDetails({
                 </tr>
               ) : (
                 filteredCredits.map((credit) => (
-                  <tr key={credit.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr 
+                    key={credit.id} 
+                    onClick={() => onEditCredit && onEditCredit(credit.id)}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(credit.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">{credit.item}</td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">{formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
