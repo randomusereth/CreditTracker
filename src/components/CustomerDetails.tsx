@@ -140,7 +140,6 @@ export function CustomerDetails({
   allCustomers,
   onChangeCustomer
 }: CustomerDetailsProps) {
-  const router = useRouter();
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
 
   const [showFilters, setShowFilters] = useState(false);
@@ -313,10 +312,7 @@ export function CustomerDetails({
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => {
-            // Use router to go back to customers page
-            router.push('/customers');
-          }}
+          onClick={onBack}
           className="p-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           title="Back"
         >

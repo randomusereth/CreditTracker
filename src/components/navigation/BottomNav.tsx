@@ -27,13 +27,17 @@ export function BottomNav() {
   // Don't show navigation on onboarding page, bulk payment page, or if not authenticated
   if (!user || pathname === '/onboarding' || pathname === '/bulk-payment') return null;
 
-  // Always use Amharic language for bottom navigation
-  const language = 'am';
+  // Extract language value to ensure React tracks it as a dependency
+  // This ensures the component re-renders when language changes
+  const language = appState?.settings?.language || 'en';
 
-  // Create translation function - always uses Amharic
+  // Create translation function - this will use the current language value
   const t = (key: string) => {
     return translations[language]?.[key] || translations['en'][key] || key;
   };
+
+  // Force re-render by using language in the component key or ensuring it's tracked
+  // The language variable is now a primitive value that React can track
 
   const isActive = (path: string) => {
     if (path === '/') {
