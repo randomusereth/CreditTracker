@@ -18,6 +18,7 @@ interface DashboardProps {
 const translations: Record<string, Record<string, string>> = {
   en: {
     dashboard: 'Dashboard',
+    welcomeMessage: "Welcome back! Here's what's happening with your credits today.",
     totalCredits: 'Total Credits',
     paidCredits: 'Paid Credits',
     unpaidCredits: 'Unpaid Credits',
@@ -40,6 +41,7 @@ const translations: Record<string, Record<string, string>> = {
   },
   am: {
     dashboard: 'ዳሽቦርድ',
+    welcomeMessage: 'እንኳን ደህና መጡ! ዛሬ ከብድርዎ ጋር በተያያዘ ያለው ሁኔታ ይህ ነው።',
     totalCredits: 'ጠቅላላ ብድሮች',
     paidCredits: 'የተከፈሉ ብድሮች',
     unpaidCredits: 'ያልተከፈሉ ብድሮች',
@@ -202,7 +204,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
         <div>
           <h1 className="text-gray-900 dark:text-white">{t('dashboard')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-          እንኳን ደህና መጡ! ዛሬ ከብድርዎ ጋር በተያያዘ ያለው ሁኔታ ይህ ነው።
+            {t('welcomeMessage')}
           </p>
         </div>
         <button
