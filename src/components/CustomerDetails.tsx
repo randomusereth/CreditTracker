@@ -73,6 +73,9 @@ const translations: Record<string, Record<string, string>> = {
     noOutstanding: 'You have no outstanding credits. Thank you!',
     totalOutstanding: 'Total Outstanding',
     etb: 'ETB',
+    unpaidTab: 'Unpaid',
+    paidTab: 'Paid',
+    noUnpaidCredits: 'No unpaid credits',
   },
   am: {
     totalCredits: 'ጠቅላላ ብድሮች',
@@ -123,6 +126,9 @@ const translations: Record<string, Record<string, string>> = {
     noOutstanding: 'ያልተከፈለ ብድር የለቦትም እናመሰግናለን',
     totalOutstanding: 'ያልተከፈል ብር መጠን',
     etb: 'ብር',
+    unpaidTab: 'ያልተከፈለ',
+    paidTab: 'ተከፍሏል',
+    noUnpaidCredits: 'ያልተከፈለ ብድር የለም',
   },
 };
 
@@ -144,6 +150,7 @@ export function CustomerDetails({
 }: CustomerDetailsProps) {
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
 
+  const [activeTab, setActiveTab] = useState<'unpaid' | 'paid'>('unpaid');
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid' | 'partially-paid'>('all');
   const [amountFilter, setAmountFilter] = useState<'none' | 'gt' | 'lt' | 'range'>('none');
@@ -158,7 +165,19 @@ export function CustomerDetails({
   const [customerForm, setCustomerForm] = useState({ name: customer.name, phone: customer.phone });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'customer' | 'credit'; id: string; name?: string }>({ isOpen: false, type: 'credit', id: '' });
 
-  const filteredCredits = credits.filter((credit) => {
+  // First filter by tab (unpaid or paid)
+  const tabFilteredCredits = credits.filter((credit) => {
+    if (activeTab === 'unpaid') {
+      // Show unpaid and partially-paid credits (remainingAmount > 0)
+      return credit.remainingAmount > 0;
+    } else {
+      // Show paid credits (remainingAmount === 0)
+      return credit.remainingAmount === 0;
+    }
+  });
+
+  // Then apply other filters
+  const filteredCredits = tabFilteredCredits.filter((credit) => {
     if (statusFilter !== 'all' && credit.status !== statusFilter) return false;
     if (amountFilter !== 'none') {
       if (amountFilter === 'gt' && amountValue && credit.totalAmount <= parseFloat(amountValue)) return false;
@@ -442,6 +461,30 @@ export function CustomerDetails({
             </div>
           </div>
 
+          {/* Tabs */}
+          <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setActiveTab('unpaid')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === 'unpaid'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              {t('unpaidTab')}
+            </button>
+            <button
+              onClick={() => setActiveTab('paid')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === 'paid'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              {t('paidTab')}
+            </button>
+          </div>
+
           {/* Filters Panel */}
           {showFilters && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
@@ -540,25 +583,30 @@ export function CustomerDetails({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('date')}</th>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('itemSold')}</th>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('total')}</th>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('paidAmount')}</th>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('remaining')}</th>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('status')}</th>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('remarks')}</th>
-                <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredCredits.length === 0 ? (
+          {activeTab === 'unpaid' && filteredCredits.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-gray-500 dark:text-gray-400 text-lg">{t('noUnpaidCredits')}</p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">{t('noCredits')}</td>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('date')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('itemSold')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('total')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('paidAmount')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('remaining')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('status')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('remarks')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700 dark:text-gray-300">{t('actions')}</th>
                 </tr>
-              ) : (
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredCredits.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">{t('noCredits')}</td>
+                  </tr>
+                ) : (
                 filteredCredits.map((credit) => (
                   <tr 
                     key={credit.id} 
@@ -595,9 +643,10 @@ export function CustomerDetails({
                     </td>
                   </tr>
                 ))
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
