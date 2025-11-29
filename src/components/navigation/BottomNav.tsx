@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, CreditCard, FileText, UserCog } from 'lucide-react';
+import { Home, Users, CreditCard, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/components/providers/AppProvider';
@@ -10,14 +10,12 @@ const translations: Record<string, Record<string, string>> = {
     home: 'Home',
     customers: 'Customers',
     credits: 'Credits',
-    reports: 'Reports',
     staff: 'Staff',
   },
   am: {
     home: 'መነሻ',
     customers: 'ደንበኞች',
     credits: 'ብድሮች',
-    reports: 'ሪፖርቶች',
     staff: 'ሰራተኞች',
   },
 };
@@ -29,10 +27,17 @@ export function BottomNav() {
   // Don't show navigation on onboarding page, bulk payment page, or if not authenticated
   if (!user || pathname === '/onboarding' || pathname === '/bulk-payment') return null;
 
-  // Access language directly from settings to ensure component re-renders
-  // Use the language value directly so React can track changes
+  // Extract language value to ensure React tracks it as a dependency
+  // This ensures the component re-renders when language changes
   const language = appState?.settings?.language || 'en';
-  const t = (key: string) => translations[language]?.[key] || translations['en'][key];
+  
+  // Create translation function - this will use the current language value
+  const t = (key: string) => {
+    return translations[language]?.[key] || translations['en'][key] || key;
+  };
+  
+  // Force re-render by using language in the component key or ensuring it's tracked
+  // The language variable is now a primitive value that React can track
 
   const isActive = (path: string) => {
     if (path === '/') {
