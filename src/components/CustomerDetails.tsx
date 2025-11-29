@@ -155,7 +155,12 @@ export function CustomerDetails({
   const [customerForm, setCustomerForm] = useState({ name: customer.name, phone: customer.phone });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'customer' | 'credit'; id: string; name?: string }>({ isOpen: false, type: 'credit', id: '' });
 
-  // Filter by tab (unpaid or paid)
+  // Calculate key metrics from all credits (independent of tab)
+  const totalCredits = credits.reduce((sum, c) => sum + c.totalAmount, 0);
+  const totalPaid = credits.reduce((sum, c) => sum + c.paidAmount, 0);
+  const totalUnpaid = credits.reduce((sum, c) => sum + c.remainingAmount, 0);
+
+  // Filter by tab (unpaid or paid) - only affects the table display
   const filteredCredits = credits.filter((credit) => {
     if (activeTab === 'unpaid') {
       // Show unpaid and partially-paid credits (remainingAmount > 0)
@@ -165,10 +170,6 @@ export function CustomerDetails({
       return credit.remainingAmount === 0;
     }
   });
-
-  const totalCredits = filteredCredits.reduce((sum, c) => sum + c.totalAmount, 0);
-  const totalPaid = filteredCredits.reduce((sum, c) => sum + c.paidAmount, 0);
-  const totalUnpaid = filteredCredits.reduce((sum, c) => sum + c.remainingAmount, 0);
 
 
   const handleExportPDF = () => {
