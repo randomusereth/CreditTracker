@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Customer, Credit, AppSettings, PaymentRecord } from '../types';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Users, CreditCard as CreditCardIcon, AlertCircle, Clock, Search, User, Phone } from 'lucide-react';
-import { CreditDetailsModal } from './CreditDetailsModal';
 import { formatNumber } from '../utils/formatNumber';
 
 interface DashboardProps {
@@ -9,6 +8,7 @@ interface DashboardProps {
   credits: Credit[];
   onAddCredit: () => void;
   onViewCustomer: (id: string) => void;
+  onEditCredit?: (creditId: string) => void;
   settings: AppSettings;
   onUpdateCredit: (credit: Credit) => void;
   onChangeCustomer: (creditId: string, newCustomerId: string) => void;
@@ -88,9 +88,8 @@ const translations: Record<string, Record<string, string>> = {
   },
 };
 
-export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, settings, onUpdateCredit, onChangeCustomer, onNavigateToCustomer }: DashboardProps) {
+export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, onEditCredit, settings, onUpdateCredit, onChangeCustomer, onNavigateToCustomer }: DashboardProps) {
   const t = (key: string) => translations[settings.language][key] || key;
-  const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -187,19 +186,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
   return (
     <div className="space-y-6">
       {/* Credit Details Modal */}
-      {selectedCredit && (
-        <CreditDetailsModal
-          isOpen={true}
-          onClose={() => setSelectedCredit(null)}
-          credit={selectedCredit}
-          customer={customers.find(c => c.id === selectedCredit.customerId)!}
-          allCustomers={customers}
-          onChangeCustomer={onChangeCustomer}
-          onUpdateCredit={onUpdateCredit}
-          onNavigateToCustomer={onNavigateToCustomer}
-          settings={settings}
-        />
-      )}
+      {/* Credit Details Modal removed - using page instead */}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -373,7 +360,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                   <tr
                     key={credit.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
-                    onClick={() => setSelectedCredit(credit)}
+                    onClick={() => onEditCredit && onEditCredit(credit.id)}
                   >
                     <td
                       className="px-6 py-4 text-gray-900 dark:text-white"
@@ -449,7 +436,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
                   <tr
                     key={payment.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
-                    onClick={() => setSelectedCredit(payment.credit)}
+                    onClick={() => onEditCredit && onEditCredit(payment.credit.id)}
                   >
                     <td
                       className="px-6 py-4 text-gray-900 dark:text-white"

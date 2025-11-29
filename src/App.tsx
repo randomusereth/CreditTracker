@@ -17,6 +17,8 @@ import { ShopProfile } from './components/ShopProfile';
 import { StaffManagement } from './components/StaffManagement';
 import { AllCredits } from './components/AllCredits';
 import { BulkPayment } from './components/BulkPayment';
+import { EditCredit } from './components/EditCredit';
+import { RecordPayment } from './components/RecordPayment';
 import { Customer, Credit, ShopInfo, Staff, AppSettings, AppState } from './types';
 import { User } from './types/auth';
 import { getCurrentUser, saveCurrentUser, clearCurrentUser, createUserWithPassword, authenticateUser, userExists, validatePIN, getTelegramUserId } from './lib/auth';
@@ -498,8 +500,10 @@ function App() {
     settings: initialSettings,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'add-customer' | 'customer-details' | 'add-credit' | 'all-credits' | 'reports' | 'settings' | 'shop-profile' | 'staff' | 'bulk-payment'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'add-customer' | 'customer-details' | 'add-credit' | 'all-credits' | 'reports' | 'settings' | 'shop-profile' | 'staff' | 'bulk-payment' | 'edit-credit' | 'record-payment'>('dashboard');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCreditId, setSelectedCreditId] = useState<string | null>(null);
+  const [previousView, setPreviousView] = useState<string | null>(null);
   const [pendingCustomerId, setPendingCustomerId] = useState<string | null>(null);
 
   // Handle deep links from Telegram bot - check URL on mount
@@ -755,10 +759,25 @@ function App() {
     }));
   };
 
-  const navigateTo = (view: typeof currentView, customerId?: string) => {
+  const navigateTo = (view: typeof currentView, customerId?: string, creditId?: string) => {
+    // Store previous view for back navigation
+    setPreviousView(currentView);
     setCurrentView(view);
     if (customerId) {
       setSelectedCustomerId(customerId);
+    }
+    if (creditId) {
+      setSelectedCreditId(creditId);
+    }
+  };
+
+  const navigateBack = () => {
+    if (previousView) {
+      setCurrentView(previousView as typeof currentView);
+      setPreviousView(null);
+    } else {
+      // Fallback to dashboard if no previous view
+      navigateTo('dashboard');
     }
   };
 
@@ -792,9 +811,9 @@ function App() {
           <AddCustomer
             onAddCustomer={(customer) => {
               addCustomer(customer);
-              navigateTo('customers');
+              navigateBack();
             }}
-            onCancel={() => navigateTo('customers')}
+            onCancel={() => navigateBack()}
             settings={appState.settings}
           />
         );
@@ -803,9 +822,11 @@ function App() {
           <CustomerDetails
             customer={appState.customers.find(c => c.id === selectedCustomerId)!}
             credits={appState.credits.filter(c => c.customerId === selectedCustomerId)}
-            onBack={() => navigateTo('customers')}
+            onBack={() => navigateBack()}
             onAddCredit={() => navigateTo('add-credit', selectedCustomerId)}
             onBulkPayment={() => navigateTo('bulk-payment', selectedCustomerId)}
+            onEditCredit={(creditId) => navigateTo('edit-credit', selectedCustomerId, creditId)}
+            onRecordPayment={(creditId) => navigateTo('record-payment', selectedCustomerId, creditId)}
             settings={appState.settings}
             onUpdateCustomer={updateCustomer}
             onDeleteCustomer={deleteCustomer}
@@ -822,9 +843,9 @@ function App() {
             preselectedCustomerId={selectedCustomerId}
             onAddCredit={(credit) => {
               addCredit(credit);
-              navigateTo('dashboard');
+              navigateBack();
             }}
-            onCancel={() => navigateTo('dashboard')}
+            onCancel={() => navigateBack()}
             onAddCustomer={(customer) => {
               const newCustomer: Customer = {
                 ...customer,
@@ -930,22 +951,36 @@ function App() {
               });
 
               // Navigate back
-              if (selectedCustomerId) {
-                navigateTo('customer-details', selectedCustomerId);
-              } else {
-                navigateTo('dashboard');
-              }
+              navigateBack();
             }}
             onClose={() => {
-              if (selectedCustomerId) {
-                navigateTo('customer-details', selectedCustomerId);
-              } else {
-                navigateTo('dashboard');
-              }
+              navigateBack();
             }}
             settings={appState.settings}
           />
         );
+      case 'edit-credit':
+        return selectedCreditId ? (
+          <EditCredit
+            credit={appState.credits.find(c => c.id === selectedCreditId)!}
+            customer={appState.customers.find(c => c.id === (appState.credits.find(cr => cr.id === selectedCreditId)?.customerId || ''))!}
+            allCustomers={appState.customers}
+            onChangeCustomer={changeCustomer}
+            onUpdateCredit={updateCredit}
+            onNavigateToCustomer={(customerId) => navigateTo('customer-details', customerId)}
+            onBack={() => navigateBack()}
+            settings={appState.settings}
+          />
+        ) : null;
+      case 'record-payment':
+        return selectedCreditId ? (
+          <RecordPayment
+            credit={appState.credits.find(c => c.id === selectedCreditId)!}
+            onUpdateCredit={updateCredit}
+            onBack={() => navigateBack()}
+            settings={appState.settings}
+          />
+        ) : null;
       default:
         return null;
     }
@@ -954,7 +989,8 @@ function App() {
   return (
     <AppContext.Provider value={{ appState, setAppState, user, logout }}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Top Navigation */}
+        {/* Top Navigation - Hidden on bulk payment, add-credit, edit-credit, record-payment pages */}
+        {!['bulk-payment', 'add-credit', 'edit-credit', 'record-payment'].includes(currentView) && (
         <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -973,49 +1009,50 @@ function App() {
             </div>
           </div>
         </nav>
+        )}
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24">
           {renderView()}
         </main>
 
-        {/* Bottom Navigation - Hidden on bulk payment page */}
-        {currentView !== 'bulk-payment' && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50" style={{ position: 'fixed', bottom: 0, transform: 'translateZ(0)', willChange: 'transform' }}>
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex justify-around items-center h-16">
-              <button
-                onClick={() => navigateTo('dashboard')}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentView === 'dashboard'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400'
-                  }`}
-              >
-                <Home className="w-5 h-5" />
-                <span className="text-xs">መነሻ</span>
-              </button>
-              <button
-                onClick={() => navigateTo('customers')}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentView === 'customers' || currentView === 'add-customer' || currentView === 'customer-details'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400'
-                  }`}
-              >
-                <Users className="w-5 h-5" />
-                <span className="text-xs">ደንበኞች</span>
-              </button>
-              <button
-                onClick={() => navigateTo('all-credits')}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentView === 'all-credits'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400'
-                  }`}
-              >
-                <CreditCard className="w-5 h-5" />
-                <span className="text-xs">ብድሮች</span>
-              </button>
-              {/* Staff button - hidden for now, uncomment to show */}
-              {/* <button
+        {/* Bottom Navigation - Hidden on bulk payment, add-credit, edit-credit, record-payment pages */}
+        {!['bulk-payment', 'add-credit', 'edit-credit', 'record-payment'].includes(currentView) && (
+          <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50" style={{ position: 'fixed', bottom: 0, transform: 'translateZ(0)', willChange: 'transform' }}>
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="flex justify-around items-center h-16">
+                <button
+                  onClick={() => navigateTo('dashboard')}
+                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentView === 'dashboard'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400'
+                    }`}
+                >
+                  <Home className="w-5 h-5" />
+                  <span className="text-xs">መነሻ</span>
+                </button>
+                <button
+                  onClick={() => navigateTo('customers')}
+                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentView === 'customers' || currentView === 'add-customer' || currentView === 'customer-details'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400'
+                    }`}
+                >
+                  <Users className="w-5 h-5" />
+                  <span className="text-xs">ደንበኞች</span>
+                </button>
+                <button
+                  onClick={() => navigateTo('all-credits')}
+                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentView === 'all-credits'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400'
+                    }`}
+                >
+                  <CreditCard className="w-5 h-5" />
+                  <span className="text-xs">ብድሮች</span>
+                </button>
+                {/* Staff button - hidden for now, uncomment to show */}
+                {/* <button
                 onClick={() => navigateTo('staff')}
                 className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
                   currentView === 'staff'
@@ -1026,9 +1063,9 @@ function App() {
                 <UserCog className="w-5 h-5" />
                 <span className="text-xs">Staff</span>
               </button> */}
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
         )}
 
       </div>

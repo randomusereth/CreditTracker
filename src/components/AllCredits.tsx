@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Customer, Credit, AppSettings } from '../App';
 import { Search, Filter, X, CreditCard as CreditCardIcon } from 'lucide-react';
-import { CreditDetailsModal } from './CreditDetailsModal';
 import { formatNumber } from '../utils/formatNumber';
 
 interface AllCreditsProps {
@@ -11,6 +10,7 @@ interface AllCreditsProps {
   onUpdateCredit: (credit: Credit) => void;
   onChangeCustomer: (creditId: string, newCustomerId: string) => void;
   onNavigateToCustomer: (customerId: string) => void;
+  onEditCredit?: (creditId: string) => void;
 }
 
 const translations: Record<string, Record<string, string>> = {
@@ -74,7 +74,7 @@ const translations: Record<string, Record<string, string>> = {
   },
 };
 
-export function AllCredits({ credits, customers, settings, onUpdateCredit, onChangeCustomer, onNavigateToCustomer }: AllCreditsProps) {
+export function AllCredits({ credits, customers, settings, onUpdateCredit, onChangeCustomer, onNavigateToCustomer, onEditCredit }: AllCreditsProps) {
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,7 +87,6 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
   const [singleDate, setSingleDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
 
   const getCustomerInfo = (customerId: string) => {
     return customers.find(c => c.id === customerId);
@@ -311,20 +310,7 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
 
   return (
     <div className="space-y-6">
-      {/* Credit Details Modal */}
-      {selectedCredit && (
-        <CreditDetailsModal
-          isOpen={true}
-          onClose={() => setSelectedCredit(null)}
-          credit={selectedCredit}
-          customer={getCustomerInfo(selectedCredit.customerId)!}
-          allCustomers={customers}
-          onChangeCustomer={onChangeCustomer}
-          onUpdateCredit={onUpdateCredit}
-          onNavigateToCustomer={onNavigateToCustomer}
-          settings={settings}
-        />
-      )}
+      {/* Credit Details Modal removed - using page instead */}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -548,7 +534,7 @@ export function AllCredits({ credits, customers, settings, onUpdateCredit, onCha
                   return (
                     <tr
                       key={credit.id}
-                      onClick={() => setSelectedCredit(credit)}
+                      onClick={() => onEditCredit && onEditCredit(credit.id)}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     >
                       <td

@@ -3,9 +3,6 @@ import { Customer, Credit, AppSettings, PaymentRecord } from '../App';
 import { ArrowLeft, Phone, MessageSquare, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet, Minus } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
-import { CreditDetailsModal } from './CreditDetailsModal';
-import { RecordPaymentModal } from './RecordPaymentModal';
-import { BulkPaymentModal } from './BulkPaymentModal';
 import { PaymentHistoryView } from './PaymentHistoryView';
 import { formatNumber } from '../utils/formatNumber';
 
@@ -15,6 +12,8 @@ interface CustomerDetailsProps {
   onBack: () => void;
   onAddCredit: () => void;
   onBulkPayment?: () => void;
+  onEditCredit?: (creditId: string) => void;
+  onRecordPayment?: (creditId: string) => void;
   settings: AppSettings;
   onUpdateCustomer: (customer: Customer) => void;
   onDeleteCustomer: (id: string) => void;
@@ -133,6 +132,8 @@ export function CustomerDetails({
   onBack,
   onAddCredit,
   onBulkPayment,
+  onEditCredit,
+  onRecordPayment,
   settings,
   onUpdateCustomer,
   onDeleteCustomer,
@@ -156,8 +157,6 @@ export function CustomerDetails({
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({ name: customer.name, phone: customer.phone });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'customer' | 'credit'; id: string; name?: string }>({ isOpen: false, type: 'credit', id: '' });
-  const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
-  const [showRecordPayment, setShowRecordPayment] = useState(false);
 
   const filteredCredits = credits.filter((credit) => {
     if (statusFilter !== 'all' && credit.status !== statusFilter) return false;
@@ -284,30 +283,6 @@ export function CustomerDetails({
         settings={settings}
       />
 
-      {/* Credit Details Modal */}
-      {selectedCredit && (
-        <CreditDetailsModal
-          isOpen={true}
-          onClose={() => setSelectedCredit(null)}
-          credit={selectedCredit}
-          customer={customer}
-          allCustomers={allCustomers}
-          onChangeCustomer={onChangeCustomer}
-          onUpdateCredit={onUpdateCredit}
-          settings={settings}
-        />
-      )}
-
-      {/* Record Payment Modal */}
-      {showRecordPayment && (
-        <RecordPaymentModal
-          isOpen={true}
-          onClose={() => setShowRecordPayment(false)}
-          credit={selectedCredit!}
-          onUpdateCredit={onUpdateCredit}
-          settings={settings}
-        />
-      )}
 
 
       {/* Header */}
@@ -585,7 +560,7 @@ export function CustomerDetails({
                 </tr>
               ) : (
                 filteredCredits.map((credit) => (
-                  <tr key={credit.id} onClick={() => setSelectedCredit(credit)} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
+                  <tr key={credit.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(credit.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">{credit.item}</td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">{formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
@@ -597,13 +572,22 @@ export function CustomerDetails({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{credit.remarks || '-'}</td>
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => setDeleteModal({ isOpen: true, type: 'credit', id: credit.id, name: credit.item })} className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title={t('delete')}>
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => setShowRecordPayment(true)} className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" title="Record Payment">
-                        <DollarSign className="w-4 h-4" />
-                      </button>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        {onEditCredit && (
+                          <button onClick={() => onEditCredit(credit.id)} className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" title="Edit Credit">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {onRecordPayment && (
+                          <button onClick={() => onRecordPayment(credit.id)} className="p-1 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded" title="Record Payment">
+                            <DollarSign className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => setDeleteModal({ isOpen: true, type: 'credit', id: credit.id, name: credit.item })} className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title={t('delete')}>
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

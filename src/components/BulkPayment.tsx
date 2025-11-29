@@ -33,7 +33,7 @@ const translations: Record<string, Record<string, string>> = {
     oldestFirst: 'Payments will be applied to oldest credits first',
   },
   am: {
-    bulkPayment: 'ጅምላ ክፍያ',
+    bulkPayment: 'ብድር መቀነሻ',
     enterAmount: 'የክፍያ መጠን ያስገቡ',
     totalOutstanding: 'ጠቅላላ ቀሪ',
     remaining: 'ቀሪ',
