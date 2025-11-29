@@ -28,7 +28,7 @@ const translations: Record<string, Record<string, string>> = {
   am: {
     customers: 'ደንበኞች',
     manageDatabase: 'የደንበኛ መረጃ ቋት ያስተዳድሩ',
-    addCustomer: 'ደንበኛ ጨምር',
+    addCustomer: 'ደንበኛ መዝግብ',
     searchPlaceholder: 'ደንበኞችን ይፈልጉ...',
     noCustomers: 'ገና ደንበኞች የሉም። የመጀመሪያውን ደንበኛ ለመጀመር ያክሉ!',
     noCustomersFound: 'ምንም ደንበኞች አልተገኙም',

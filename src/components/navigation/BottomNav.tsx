@@ -4,7 +4,6 @@ import { Home, Users, CreditCard, FileText, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/components/providers/AppProvider';
-import { useMemo } from 'react';
 
 const translations: Record<string, Record<string, string>> = {
   en: {
@@ -27,12 +26,12 @@ export function BottomNav() {
   const pathname = usePathname();
   const { user, appState } = useApp();
 
-  // Use useMemo to ensure component re-renders when language changes
-  const currentLanguage = useMemo(() => appState.settings.language, [appState.settings.language]);
-  const t = (key: string) => translations[currentLanguage]?.[key] || translations['en'][key];
+  // Don't show navigation on onboarding page, bulk payment page, or if not authenticated
+  if (!user || pathname === '/onboarding' || pathname === '/bulk-payment') return null;
 
-  // Don't show navigation on onboarding page or if not authenticated
-  if (!user || pathname === '/onboarding') return null;
+  // Directly access language to ensure re-render when it changes
+  const language = appState.settings.language;
+  const t = (key: string) => translations[language]?.[key] || translations['en'][key];
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -74,16 +73,6 @@ export function BottomNav() {
           >
             <CreditCard className="w-5 h-5" />
             <span className="text-xs">{t('credits')}</span>
-          </Link>
-          <Link
-            href="/reports"
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${isActive('/reports')
-              ? 'text-blue-600 dark:text-blue-400'
-              : 'text-gray-600 dark:text-gray-400'
-              }`}
-          >
-            <FileText className="w-5 h-5" />
-            <span className="text-xs">{t('reports')}</span>
           </Link>
           <Link
             href="/staff"

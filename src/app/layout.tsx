@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AppProvider } from '@/components/providers/AppProvider';
-import { BottomNav } from '@/components/navigation/BottomNav';
+import { BottomNavWrapper } from '@/components/navigation/BottomNavWrapper';
 import { TopNav } from '@/components/navigation/TopNav';
 import { ClearDataButton } from '@/components/debug/ClearDataButton';
 
@@ -36,8 +36,8 @@ export default function RootLayout({
               {children}
             </main>
 
-            {/* Bottom Navigation */}
-            <BottomNav />
+            {/* Bottom Navigation - Hidden on bulk payment page */}
+            {typeof window !== 'undefined' && !window.location.pathname.includes('/bulk-payment') && <BottomNav />}
 
             {/* Debug: Clear Data Button - REMOVE IN PRODUCTION */}
             <ClearDataButton />

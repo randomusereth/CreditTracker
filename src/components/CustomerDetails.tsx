@@ -308,41 +308,6 @@ export function CustomerDetails({
         />
       )}
 
-      {/* Bulk Payment Modal */}
-      {showBulkPayment && (
-        <BulkPaymentModal
-          isOpen={true}
-          onClose={() => setShowBulkPayment(false)}
-          credits={filteredCredits}
-          onApplyPayment={(updates) => {
-            updates.forEach(update => {
-              const credit = credits.find(c => c.id === update.creditId);
-              if (credit && update.paymentAmount > 0) {
-                const newPaymentRecord: PaymentRecord = {
-                  id: Date.now().toString() + Math.random(),
-                  amount: update.paymentAmount,
-                  date: new Date().toISOString(),
-                  remainingAfterPayment: credit.totalAmount - update.newPaidAmount,
-                };
-
-                const updatedCredit = {
-                  ...credit,
-                  paidAmount: update.newPaidAmount,
-                  remainingAmount: credit.totalAmount - update.newPaidAmount,
-                  status: update.newPaidAmount >= credit.totalAmount
-                    ? 'paid' as const
-                    : update.newPaidAmount > 0
-                      ? 'partially-paid' as const
-                      : 'unpaid' as const,
-                  paymentHistory: [...credit.paymentHistory, newPaymentRecord],
-                };
-                onUpdateCredit(updatedCredit);
-              }
-            });
-          }}
-          settings={settings}
-        />
-      )}
 
       {/* Header */}
       <div className="flex items-center gap-3">

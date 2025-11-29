@@ -38,6 +38,7 @@ const translations: Record<string, Record<string, string>> = {
     recentPayments: 'Recent Payments',
     paymentFor: 'Payment for',
     remainingAfter: 'Remaining After',
+    searchPlaceholder: 'Search customers by name or phone...',
   },
   am: {
     dashboard: 'ዳሽቦርድ',
@@ -61,6 +62,7 @@ const translations: Record<string, Record<string, string>> = {
     recentPayments: 'የቅርብ ጊዜ ክፍያዎች',
     paymentFor: 'ክፍያ ለ',
     remainingAfter: 'ቀሪ በኋላ',
+    searchPlaceholder: 'በስም ወይም ስልክ ደንበኞችን ይፈልጉ...',
   },
   om: {
     dashboard: 'Daashboordii',
@@ -257,7 +259,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search customers by name or phone..."
+            placeholder={t('searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
