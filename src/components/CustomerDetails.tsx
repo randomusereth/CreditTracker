@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Customer, Credit, AppSettings, PaymentRecord } from '../App';
 import { ArrowLeft, Phone, MessageSquare, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet, Minus } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -140,7 +139,6 @@ export function CustomerDetails({
   allCustomers,
   onChangeCustomer
 }: CustomerDetailsProps) {
-  const router = useRouter();
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
 
   const [showFilters, setShowFilters] = useState(false);
