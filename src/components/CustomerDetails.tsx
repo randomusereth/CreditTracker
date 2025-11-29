@@ -576,7 +576,7 @@ export function CustomerDetails({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{credit.remarks || '-'}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-2">
                         {onEditCredit && (
                           <button onClick={() => onEditCredit(credit.id)} className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" title="Edit Credit">
