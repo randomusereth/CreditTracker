@@ -140,6 +140,7 @@ export function CustomerDetails({
   allCustomers,
   onChangeCustomer
 }: CustomerDetailsProps) {
+  const router = useRouter();
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
 
   const [showFilters, setShowFilters] = useState(false);
@@ -418,7 +419,8 @@ export function CustomerDetails({
           </button>
           <button
             onClick={() => {
-              router.push(`/bulk-payment?customerId=${customer.id}`);
+              // Navigate to bulk payment page with customer ID
+              window.location.href = `/bulk-payment?customerId=${customer.id}`;
             }}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >

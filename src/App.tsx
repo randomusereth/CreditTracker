@@ -505,7 +505,7 @@ function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
-    
+
     if (customerId) {
       // Store customerId for later navigation (even if user is not logged in)
       setPendingCustomerId(customerId);
