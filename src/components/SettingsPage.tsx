@@ -342,8 +342,8 @@ export default function SettingsPage({ settings, onUpdateSettings, shopInfo, onU
         </div>
       )}
 
-      {/* Calendar Setting */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      {/* Calendar Setting - Hidden */}
+      {/* <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center gap-3 mb-4">
           <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           <div>
@@ -368,7 +368,7 @@ export default function SettingsPage({ settings, onUpdateSettings, shopInfo, onU
         <p className="text-sm text-gray-500 dark:text-gray-500 mt-3">
           Note: Ethiopian calendar dates will be marked with (ET) indicator. Full conversion coming soon.
         </p>
-      </div>
+      </div> */}
 
       {/* Logout Section */}
       {onLogout && (

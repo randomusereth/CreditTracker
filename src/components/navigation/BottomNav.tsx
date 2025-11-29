@@ -3,23 +3,7 @@
 import { Home, Users, CreditCard, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo } from 'react';
 import { useApp } from '@/components/providers/AppProvider';
-
-const translations: Record<string, Record<string, string>> = {
-  en: {
-    home: 'Home',
-    customers: 'Customers',
-    credits: 'Credits',
-    staff: 'Staff',
-  },
-  am: {
-    home: 'መነሻ',
-    customers: 'ደንበኞች',
-    credits: 'ብድሮች',
-    staff: 'ሰራተኞች',
-  },
-};
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -28,16 +12,7 @@ export function BottomNav() {
   // Don't show navigation on onboarding page, bulk payment page, or if not authenticated
   if (!user || pathname === '/onboarding' || pathname === '/bulk-payment') return null;
 
-  // Extract language value to ensure React tracks it as a dependency
-  // This ensures the component re-renders when language changes
-  const language = useMemo(() => appState?.settings?.language || 'en', [appState?.settings?.language]);
-
-  // Create translation function - this will use the current language value
-  const t = useMemo(() => {
-    return (key: string) => {
-      return translations[language]?.[key] || translations['en'][key] || key;
-    };
-  }, [language]);
+  // Always use Amharic for bottom navigation labels
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -47,7 +22,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav key={language} className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-around items-center h-16">
           <Link
@@ -88,7 +63,7 @@ export function BottomNav() {
               }`}
           >
             <UserCog className="w-5 h-5" />
-            <span className="text-xs">{t('staff')}</span>
+            <span className="text-xs">ሰራተኞች</span>
           </Link>
         </div>
       </div>

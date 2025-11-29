@@ -63,7 +63,7 @@ export function BulkPaymentClient() {
 
     // Navigate back
     if (customerId) {
-      router.push(`/customers/${customerId}`);
+      router.push('/customers');
     } else {
       router.push('/');
     }
@@ -71,7 +71,7 @@ export function BulkPaymentClient() {
 
   const handleClose = () => {
     if (customerId) {
-      router.push(`/customers/${customerId}`);
+      router.push('/customers');
     } else {
       router.push('/');
     }
