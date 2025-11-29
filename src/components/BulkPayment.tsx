@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Credit, AppSettings } from '../types';
-import { DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
+import { DollarSign, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { formatNumber, formatInputNumber, parseFormattedNumber } from '../utils/formatNumber';
 
 interface BulkPaymentProps {
@@ -150,10 +150,25 @@ export function BulkPayment({ credits, onApplyPayment, onClose, settings }: Bulk
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-      <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 16rem)' }}>
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Header with Back Button */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onClose}
+          className="p-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          title={t('cancel')}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-gray-900 dark:text-white text-2xl font-semibold">
+          {t('bulkPayment')}
+        </h1>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 16rem)' }}>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {eligibleCredits.length === 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               {t('noUnpaidCredits')}
@@ -291,6 +306,7 @@ export function BulkPayment({ credits, onApplyPayment, onClose, settings }: Bulk
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

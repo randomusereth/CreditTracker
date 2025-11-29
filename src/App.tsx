@@ -890,7 +890,7 @@ function App() {
         const bulkPaymentCredits = selectedCustomerId
           ? appState.credits.filter(c => c.customerId === selectedCustomerId && (c.status === 'unpaid' || c.status === 'partially-paid'))
           : appState.credits.filter(c => c.status === 'unpaid' || c.status === 'partially-paid');
-        
+
         return (
           <BulkPayment
             credits={bulkPaymentCredits}
@@ -928,7 +928,7 @@ function App() {
                   credits: updatedCredits,
                 };
               });
-              
+
               // Navigate back
               if (selectedCustomerId) {
                 navigateTo('customer-details', selectedCustomerId);
@@ -979,7 +979,8 @@ function App() {
           {renderView()}
         </main>
 
-        {/* Bottom Navigation */}
+        {/* Bottom Navigation - Hidden on bulk payment page */}
+        {currentView !== 'bulk-payment' && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50" style={{ position: 'fixed', bottom: 0, transform: 'translateZ(0)', willChange: 'transform' }}>
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-around items-center h-16">
@@ -1028,6 +1029,7 @@ function App() {
             </div>
           </div>
         </nav>
+        )}
 
       </div>
     </AppContext.Provider>
