@@ -796,6 +796,7 @@ function App() {
                 navigateTo('edit-credit', credit.customerId, creditId);
               }
             }}
+            onNavigateToCustomers={() => navigateTo('customers')}
             settings={appState.settings}
             onUpdateCredit={updateCredit}
             onChangeCustomer={changeCustomer}
