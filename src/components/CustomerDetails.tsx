@@ -127,7 +127,7 @@ const translations: Record<string, Record<string, string>> = {
     totalOutstanding: 'ያልተከፈል ብር መጠን',
     etb: 'ብር',
     unpaidTab: 'ያልተከፈለ',
-    paidTab: 'ተከፍሏል',
+    paidTab: 'የተከፈለ',
     noUnpaidCredits: 'ያልተከፈለ ብድር የለም',
   },
 };
@@ -432,19 +432,6 @@ export function CustomerDetails({
         </div>
       </div>
 
-      {/* Payment History for this customer */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-        <PaymentHistoryView
-          paymentHistory={credits.flatMap(credit =>
-            credit.paymentHistory.map(payment => ({
-              ...payment,
-              note: `${payment.note ? payment.note + ' - ' : ''}${credit.item}`
-            }))
-          ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
-          settings={settings}
-        />
-      </div>
-
       {/* Credit History with Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -462,23 +449,23 @@ export function CustomerDetails({
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex gap-2 mb-4">
             <button
               onClick={() => setActiveTab('unpaid')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors rounded-lg ${
                 activeTab === 'unpaid'
-                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               {t('unpaidTab')}
             </button>
             <button
               onClick={() => setActiveTab('paid')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors rounded-lg ${
                 activeTab === 'paid'
-                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               {t('paidTab')}
@@ -607,47 +594,60 @@ export function CustomerDetails({
                     <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">{t('noCredits')}</td>
                   </tr>
                 ) : (
-                filteredCredits.map((credit) => (
-                  <tr 
-                    key={credit.id} 
-                    onClick={() => onEditCredit && onEditCredit(credit.id)}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
-                  >
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(credit.date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white">{credit.item}</td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white">{formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
-                    <td className="px-6 py-4 text-green-600 dark:text-green-400">{formatNumber(credit.paidAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
-                    <td className="px-6 py-4 text-red-600 dark:text-red-400">{formatNumber(credit.remainingAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs ${credit.status === 'paid' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : credit.status === 'partially-paid' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
-                        {t(credit.status === 'paid' ? 'paid' : credit.status === 'partially-paid' ? 'partiallyPaid' : 'unpaid')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{credit.remarks || '-'}</td>
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-2">
-                        {onEditCredit && (
-                          <button onClick={() => onEditCredit(credit.id)} className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" title="Edit Credit">
-                            <Edit2 className="w-4 h-4" />
+                  filteredCredits.map((credit) => (
+                    <tr
+                      key={credit.id}
+                      onClick={() => onEditCredit && onEditCredit(credit.id)}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                    >
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(credit.date).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white">{credit.item}</td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white">{formatNumber(credit.totalAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
+                      <td className="px-6 py-4 text-green-600 dark:text-green-400">{formatNumber(credit.paidAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
+                      <td className="px-6 py-4 text-red-600 dark:text-red-400">{formatNumber(credit.remainingAmount)} {settings.language === 'am' ? 'ብር' : 'ETB'}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs ${credit.status === 'paid' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : credit.status === 'partially-paid' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
+                          {t(credit.status === 'paid' ? 'paid' : credit.status === 'partially-paid' ? 'partiallyPaid' : 'unpaid')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{credit.remarks || '-'}</td>
+                      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2">
+                          {onEditCredit && (
+                            <button onClick={() => onEditCredit(credit.id)} className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" title="Edit Credit">
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {onRecordPayment && (
+                            <button onClick={() => onRecordPayment(credit.id)} className="p-1 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded" title="Record Payment">
+                              <DollarSign className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button onClick={() => setDeleteModal({ isOpen: true, type: 'credit', id: credit.id, name: credit.item })} className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title={t('delete')}>
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                        )}
-                        {onRecordPayment && (
-                          <button onClick={() => onRecordPayment(credit.id)} className="p-1 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded" title="Record Payment">
-                            <DollarSign className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button onClick={() => setDeleteModal({ isOpen: true, type: 'credit', id: credit.id, name: credit.item })} className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title={t('delete')}>
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           )}
         </div>
+      </div>
+
+      {/* Payment History for this customer */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+        <PaymentHistoryView
+          paymentHistory={credits.flatMap(credit =>
+            credit.paymentHistory.map(payment => ({
+              ...payment,
+              note: `${payment.note ? payment.note + ' - ' : ''}${credit.item}`
+            }))
+          ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
+          settings={settings}
+        />
       </div>
     </div>
   );
