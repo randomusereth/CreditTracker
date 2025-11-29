@@ -5,9 +5,27 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/components/providers/AppProvider';
 
+const translations: Record<string, Record<string, string>> = {
+  en: {
+    home: 'Home',
+    customers: 'Customers',
+    credits: 'Credits',
+    reports: 'Reports',
+    staff: 'Staff',
+  },
+  am: {
+    home: 'መነሻ',
+    customers: 'ደንበኞች',
+    credits: 'ብድሮች',
+    reports: 'ሪፖርቶች',
+    staff: 'ሰራተኞች',
+  },
+};
+
 export function BottomNav() {
   const pathname = usePathname();
-  const { user } = useApp();
+  const { user, appState } = useApp();
+  const t = (key: string) => translations[appState.settings.language]?.[key] || translations['en'][key];
 
   // Don't show navigation on onboarding page or if not authenticated
   if (!user || pathname === '/onboarding') return null;
@@ -32,7 +50,7 @@ export function BottomNav() {
             }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-xs">Home</span>
+            <span className="text-xs">{t('home')}</span>
           </Link>
           <Link
             href="/customers"
@@ -43,7 +61,7 @@ export function BottomNav() {
             }`}
           >
             <Users className="w-5 h-5" />
-            <span className="text-xs">Customers</span>
+            <span className="text-xs">{t('customers')}</span>
           </Link>
           <Link
             href="/credits"
@@ -54,7 +72,7 @@ export function BottomNav() {
             }`}
           >
             <CreditCard className="w-5 h-5" />
-            <span className="text-xs">Credits</span>
+            <span className="text-xs">{t('credits')}</span>
           </Link>
           <Link
             href="/reports"
@@ -65,10 +83,9 @@ export function BottomNav() {
             }`}
           >
             <FileText className="w-5 h-5" />
-            <span className="text-xs">Reports</span>
+            <span className="text-xs">{t('reports')}</span>
           </Link>
-          {/* Staff link - hidden for now, uncomment to show */}
-          {/* <Link
+          <Link
             href="/staff"
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
               isActive('/staff')
@@ -77,8 +94,8 @@ export function BottomNav() {
             }`}
           >
             <UserCog className="w-5 h-5" />
-            <span className="text-xs">Staff</span>
-          </Link> */}
+            <span className="text-xs">{t('staff')}</span>
+          </Link>
         </div>
       </div>
     </nav>

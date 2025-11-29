@@ -44,7 +44,7 @@ const translations: Record<string, Record<string, string>> = {
     paidCredits: 'የተከፈሉ ብድሮች',
     unpaidCredits: 'ያልተከፈሉ ብድሮች',
     customers: 'ደንበኞች',
-    addCredit: 'ብድር ጨምር',
+    addCredit: 'ብድር መዝግብ',
     recent: 'የቅርብ ጊዜ',
     credits: 'ብድሮች',
     viewAll: 'ሁሉንም ይመልከቱ',
@@ -202,7 +202,7 @@ export function Dashboard({ customers, credits, onAddCredit, onViewCustomer, set
         <div>
           <h1 className="text-gray-900 dark:text-white">{t('dashboard')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Welcome back! Here's what's happening with your credits today.
+          እንኳን ደህና መጡ! ዛሬ ከብድርዎ ጋር በተያያዘ ያለው ሁኔታ ይህ ነው።
           </p>
         </div>
         <button
