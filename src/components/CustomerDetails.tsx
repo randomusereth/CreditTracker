@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Customer, Credit, AppSettings, PaymentRecord } from '../App';
 import { ArrowLeft, Phone, MessageSquare, Download, Plus, Edit2, Trash2, X, Filter, Save, DollarSign, Wallet, Minus } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -416,7 +417,9 @@ export function CustomerDetails({
             {t('addCredit')}
           </button>
           <button
-            onClick={() => setShowBulkPayment(true)}
+            onClick={() => {
+              router.push(`/bulk-payment?customerId=${customer.id}`);
+            }}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >
             <Minus className="w-5 h-5" />

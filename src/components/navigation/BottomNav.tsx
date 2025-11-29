@@ -29,8 +29,9 @@ export function BottomNav() {
   // Don't show navigation on onboarding page, bulk payment page, or if not authenticated
   if (!user || pathname === '/onboarding' || pathname === '/bulk-payment') return null;
 
-  // Directly access language to ensure re-render when it changes
-  const language = appState.settings.language;
+  // Access language directly from settings to ensure component re-renders
+  // Use the language value directly so React can track changes
+  const language = appState?.settings?.language || 'en';
   const t = (key: string) => translations[language]?.[key] || translations['en'][key];
 
   const isActive = (path: string) => {
