@@ -929,7 +929,7 @@ function App() {
                   }`}
               >
                 <Home className="w-5 h-5" />
-                <span className="text-xs">Home</span>
+                <span className="text-xs">መነሻ</span>
               </button>
               <button
                 onClick={() => navigateTo('customers')}
@@ -939,7 +939,7 @@ function App() {
                   }`}
               >
                 <Users className="w-5 h-5" />
-                <span className="text-xs">Customers</span>
+                <span className="text-xs">ደንበኞች</span>
               </button>
               <button
                 onClick={() => navigateTo('all-credits')}
@@ -949,7 +949,7 @@ function App() {
                   }`}
               >
                 <CreditCard className="w-5 h-5" />
-                <span className="text-xs">Credits</span>
+                <span className="text-xs">ብድሮች</span>
               </button>
               {/* Staff button - hidden for now, uncomment to show */}
               {/* <button
