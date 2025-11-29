@@ -870,6 +870,12 @@ function App() {
             onUpdateCredit={updateCredit}
             onChangeCustomer={changeCustomer}
             onNavigateToCustomer={(customerId) => navigateTo('customer-details', customerId)}
+            onEditCredit={(creditId) => {
+              const credit = appState.credits.find(c => c.id === creditId);
+              if (credit) {
+                navigateTo('edit-credit', credit.customerId, creditId);
+              }
+            }}
           />
         );
       case 'reports':
