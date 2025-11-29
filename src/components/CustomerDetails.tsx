@@ -156,7 +156,6 @@ export function CustomerDetails({
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'customer' | 'credit'; id: string; name?: string }>({ isOpen: false, type: 'credit', id: '' });
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
   const [showRecordPayment, setShowRecordPayment] = useState(false);
-  const [showBulkPayment, setShowBulkPayment] = useState(false);
 
   const filteredCredits = credits.filter((credit) => {
     if (statusFilter !== 'all' && credit.status !== statusFilter) return false;

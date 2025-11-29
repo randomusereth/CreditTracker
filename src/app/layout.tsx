@@ -37,7 +37,7 @@ export default function RootLayout({
             </main>
 
             {/* Bottom Navigation - Hidden on bulk payment page */}
-            {typeof window !== 'undefined' && !window.location.pathname.includes('/bulk-payment') && <BottomNav />}
+            <BottomNavWrapper />
 
             {/* Debug: Clear Data Button - REMOVE IN PRODUCTION */}
             <ClearDataButton />
