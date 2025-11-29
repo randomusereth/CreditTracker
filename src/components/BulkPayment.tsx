@@ -67,6 +67,11 @@ interface PaymentDistribution {
 export function BulkPayment({ credits, onApplyPayment, onClose, settings }: BulkPaymentProps) {
   const t = (key: string) => translations[settings.language]?.[key] || translations['en'][key];
 
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Filter and sort credits: only unpaid and partially-paid, sorted by date (oldest first)
   const eligibleCredits = credits
     .filter(c => c.status === 'unpaid' || c.status === 'partially-paid')
