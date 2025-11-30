@@ -59,3 +59,4 @@ CREATE POLICY "Allow all for authenticated users" ON users
 
 
 
+

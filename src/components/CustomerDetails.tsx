@@ -339,18 +339,19 @@ export function CustomerDetails({
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <p className="text-gray-600 dark:text-gray-400">{t('totalPaid')}</p>
-          <p className="text-green-600 dark:text-green-400 mt-1 text-2xl">{formatNumber(totalPaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <p className="text-gray-600 dark:text-gray-400">{t('outstanding')}</p>
-          <p className="text-red-600 dark:text-red-400 mt-1 text-2xl">{formatNumber(totalUnpaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <p className="text-gray-600 dark:text-gray-400">{t('totalCredits')}</p>
-          <p className="text-gray-900 dark:text-white mt-1 text-2xl">{formatNumber(totalCredits)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
+          <div className="flex items-center justify-around">
+            <div className="flex-1 text-center">
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{t('totalPaid')}</p>
+              <p className="text-green-600 dark:text-green-400 mt-1 text-xl">{formatNumber(totalPaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
+            </div>
+            <div className="w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
+            <div className="flex-1 text-center">
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{t('outstanding')}</p>
+              <p className="text-red-600 dark:text-red-400 mt-1 text-xl">{formatNumber(totalUnpaid)} {settings.language === 'am' ? 'ብር' : 'ETB'}</p>
+            </div>
+          </div>
         </div>
       </div>
 
